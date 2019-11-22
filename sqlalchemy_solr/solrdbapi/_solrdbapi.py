@@ -17,9 +17,10 @@ default_storage_plugin = ""
 # Python DB API 2.0 classes
 class Cursor(object):
 
-    def __init__(self, host, db, port, proto, session, conn):
+    def __init__(self, host, server_path, db, port, proto, session, conn):
 
         self.arraysize = 1
+        self.server_path = server_path
         self.db = db
         self.description = None
         self.host = host
@@ -68,11 +69,11 @@ class Cursor(object):
         return query
 
     @staticmethod
-    def submit_query(query, host, port, proto, server_path, collection, session):
+    def submit_query(query, server_path, db, host, port, proto, session):
         local_payload = api_globals._PAYLOAD.copy()
         local_payload["query"] = query
         return session.get(
-            proto + host + ":" + str(port) + "/" + server_path + "/" + collection + "/sql",
+            proto + host + ":" + str(port) + "/" + server_path + "/" + db + "/sql",
             params=local_payload["query"],
             headers=api_globals._HEADER
         )
@@ -115,11 +116,11 @@ class Cursor(object):
     def execute(self, operation, parameters=()):
         result = self.submit_query(
             self.substitute_in_query(operation, parameters),
+            self.server_path,
+            self.db,
             self.host,
             self.port,
             self.proto,
-            self.server_path,
-            self.collection,
             self._session
         )
 
@@ -202,13 +203,12 @@ class Cursor(object):
 
 
 class Connection(object):
-    def __init__(self, host, db, port, proto, session):
+    def __init__(self, host, server_path, db, port, proto, session):
         self.host = host
+        self.server_path = server_path
         self.db = db
         self.proto = proto
         self.port = port
-        self.server_path = server_path
-        self.collection = collection
         self._session = session
         self._connected = True
 
@@ -265,11 +265,11 @@ class Connection(object):
 
     @connected
     def cursor(self):
-        return Cursor(self.host, self.db, self.port, self.proto, self.server_path, 
-            self.collection, self._session, self)
+        return Cursor(self.host, self.server_path, self.db, self.port, self.proto, 
+            self._session, self)
 
 
-def connect(host, port=8983, db=None, use_ssl=False, solruser=None, solrpass=None, verify_ssl=False, ca_certs=None):
+def connect(host, port=8983, server_path='solr', db=None, use_ssl=False, solruser=None, solrpass=None, verify_ssl=False, ca_certs=None):
     session = Session()
 
     if verify_ssl is False:
@@ -285,9 +285,10 @@ def connect(host, port=8983, db=None, use_ssl=False, solruser=None, solrpass=Non
     else:
         proto = "http://"
 
-    local_url = "/admin/metrics"
+    local_url = "/" + server_path + "/admin/metrics"
     local_payload = api_globals._PAYLOAD.copy()
     local_payload["query"] = ""
+    print("Connecting to " + "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url))
     response = session.get(
         "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url),
         params=local_payload["query"],
@@ -308,8 +309,9 @@ def connect(host, port=8983, db=None, use_ssl=False, solruser=None, solrpass=Non
             raise AuthError(str(raw_data), response.status_code)
 
         if db is not None:
+            print('DB: ' + db)
             local_payload = api_globals._PAYLOAD.copy()
-            local_url = "/query.json"
+            local_url = "/" + server_path + "/" + db + "/select"
             #local_payload["query"] = "USE {}".format(db)
             local_payload["query"] = "SELECT 'test' FROM (VALUES(1))"
 
@@ -326,4 +328,4 @@ def connect(host, port=8983, db=None, use_ssl=False, solruser=None, solrpass=Non
                 print("************************************")
                 raise DatabaseError(str(response.json()["errorMessage"]), response.status_code)
 
-        return Connection(host, db, port, proto, session)
+        return Connection(host, server_path, db, port, proto, session)

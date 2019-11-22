@@ -57,7 +57,7 @@ _type_map = {
     'float8': types.FLOAT,
 }
 
-class SolrCompiler_sasolr(compiler.SQLCompiler):
+class SolrCompiler(compiler.SQLCompiler):
 
     def visit_char_length_func(self, fn, **kw):
         return 'length{}'.format(self.function_argspec(fn, **kw))
@@ -118,7 +118,7 @@ class SolrDialect(default.DefaultDialect):
     driver = 'rest'
     dbapi = ""
     preparer = SolrIdentifierPreparer
-    statement_compiler = SolrCompiler_sasolr
+    statement_compiler = SolrCompiler
     poolclass = pool.SingletonThreadPool
     supports_alter = False
     supports_pk_autoincrement = False
@@ -147,21 +147,24 @@ class SolrDialect(default.DefaultDialect):
             db_parts = url.database.split('/')
             print(db_parts)
 
-            # Map Database to Collection:
+            # Server path mapping
             if db_parts[0]:
-                db = db_parts[0]
+                server_path = db_parts[0]
+
+            # Mapping database to collection
+            if db_parts[1]:
+                db = db_parts[1]
 
             # Save this for later use.
             self.host = url.host
             self.port = url_port
-            self.username = url.username
-            self.password = url.password
+            self.server_path = server_path
             self.db = db
 
             qargs.update(url.query)
             qargs['db'] = db
         except Exception as ex:
-            logging.error("Error in SolrDialect_sasolr.create_connect_args :: " + str(ex))
+            logging.error("Error in SolrDialect.create_connect_args :: " + str(ex))
 
         return [], qargs
 

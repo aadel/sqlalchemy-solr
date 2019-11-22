@@ -22,7 +22,7 @@
 __version__ = '0.1'
 from sqlalchemy.dialects import registry
 
-registry.register("solr", "sqlalchemy_solr.sasolr", "SolrDialect_sasolr")
+registry.register("solr", "sqlalchemy_solr.base", "SolrDialect")
 
 # TODO: future release
 # registry.register("solr.jdbc", "sqlalchemy_solr.jdbc", "SolrDialect_jdbc")
