@@ -140,6 +140,7 @@ class SolrDialect(default.DefaultDialect):
         return module
 
     def create_connect_args(self, url, **kwargs):
+        print('connect args ' + url.database)
         url_port = url.port or 8983
         qargs = {'host': url.host, 'port': url_port}
 
@@ -153,16 +154,18 @@ class SolrDialect(default.DefaultDialect):
 
             # Mapping database to collection
             if db_parts[1]:
-                db = db_parts[1]
+                collection = db_parts[1]
 
             # Save this for later use.
             self.host = url.host
             self.port = url_port
+            self.collection = collection
             self.server_path = server_path
-            self.db = db
 
             qargs.update(url.query)
-            qargs['db'] = db
+            qargs['db'] = url.database
+            qargs['collection'] = collection
+            qargs['server_path'] = server_path
         except Exception as ex:
             logging.error("Error in SolrDialect.create_connect_args :: " + str(ex))
 

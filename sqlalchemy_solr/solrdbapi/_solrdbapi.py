@@ -17,10 +17,9 @@ default_storage_plugin = ""
 # Python DB API 2.0 classes
 class Cursor(object):
 
-    def __init__(self, host, server_path, db, port, proto, session, conn):
+    def __init__(self, host, db, port, proto, session, conn):
 
         self.arraysize = 1
-        self.server_path = server_path
         self.db = db
         self.description = None
         self.host = host
@@ -34,6 +33,15 @@ class Cursor(object):
         self._resultSetStatus = None
         self.rowcount = -1
 
+        db_parts = db.split('.')
+
+        # Server path mapping
+        if db_parts[0]:
+            self.server_path = db_parts[0]
+        
+        # Mapping database to collection
+        if db_parts[1]:
+            self.collection = db_parts[1]
 
     # Decorator for methods which require connection
     def connected(func):
@@ -69,11 +77,12 @@ class Cursor(object):
         return query
 
     @staticmethod
-    def submit_query(query, server_path, db, host, port, proto, session):
+    def submit_query(query, db, host, port, proto, session):
         local_payload = api_globals._PAYLOAD.copy()
         local_payload["query"] = query
+        print('Connecting to ' + proto + host + ":" + str(port) + "/" + self.collection + "/" + db + "/sql")
         return session.get(
-            proto + host + ":" + str(port) + "/" + server_path + "/" + db + "/sql",
+            proto + host + ":" + str(port) + "/" + self.collection + "/" + db + "/sql",
             params=local_payload["query"],
             headers=api_globals._HEADER
         )
@@ -116,7 +125,6 @@ class Cursor(object):
     def execute(self, operation, parameters=()):
         result = self.submit_query(
             self.substitute_in_query(operation, parameters),
-            self.server_path,
             self.db,
             self.host,
             self.port,
@@ -203,14 +211,23 @@ class Cursor(object):
 
 
 class Connection(object):
-    def __init__(self, host, server_path, db, port, proto, session):
+    def __init__(self, host, db, port, proto, session):
         self.host = host
-        self.server_path = server_path
         self.db = db
         self.proto = proto
         self.port = port
         self._session = session
         self._connected = True
+
+        db_parts = db.split('.')
+        
+        # Server path mapping
+        if db_parts[0]:
+            self.server_path = db_parts[0]
+        
+        # Mapping database to collection
+        if db_parts[1]:
+            self.collection = db_parts[1]
 
     # Decorator for methods which require connection
     def connected(func):
@@ -265,11 +282,13 @@ class Connection(object):
 
     @connected
     def cursor(self):
-        return Cursor(self.host, self.server_path, self.db, self.port, self.proto, 
+        return Cursor(self.host, self.db, self.port, self.proto, 
             self._session, self)
 
 
-def connect(host, port=8983, server_path='solr', db=None, use_ssl=False, solruser=None, solrpass=None, verify_ssl=False, ca_certs=None):
+def connect(host, port=8983, db=None, collection=None, server_path=None, 
+            use_ssl=False, solruser=None, solrpass=None, verify_ssl=False, ca_certs=None):
+    
     session = Session()
 
     if verify_ssl is False:
@@ -284,6 +303,20 @@ def connect(host, port=8983, server_path='solr', db=None, use_ssl=False, solruse
         proto = "https://"
     else:
         proto = "http://"
+    print(host)
+    print(db)
+    print(collection)
+    print(server_path)
+    
+    # db_parts = db.split('.')
+    
+    # # Server path mapping
+    # if db_parts[0]:
+    #     server_path = db_parts[0]
+    
+    # # Mapping database to collection
+    # if db_parts[1]:
+    #     collection = db_parts[1]
 
     local_url = "/" + server_path + "/admin/metrics"
     local_payload = api_globals._PAYLOAD.copy()
@@ -311,10 +344,11 @@ def connect(host, port=8983, server_path='solr', db=None, use_ssl=False, solruse
         if db is not None:
             print('DB: ' + db)
             local_payload = api_globals._PAYLOAD.copy()
-            local_url = "/" + server_path + "/" + db + "/select"
-            #local_payload["query"] = "USE {}".format(db)
+
+            local_url = "/" + server_path + "/" + collection + "/select"
             local_payload["query"] = "SELECT 'test' FROM (VALUES(1))"
 
+            print("Connecting to " + "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url))
             response = session.get(
                 "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url),
                 params=local_payload["query"],
@@ -328,4 +362,4 @@ def connect(host, port=8983, server_path='solr', db=None, use_ssl=False, solruse
                 print("************************************")
                 raise DatabaseError(str(response.json()["errorMessage"]), response.status_code)
 
-        return Connection(host, server_path, db, port, proto, session)
+        return Connection(host, db, port, proto, session)

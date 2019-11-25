@@ -55,7 +55,7 @@ setup(name='sqlalchemy_solr',
       zip_safe=False,
       entry_points={
           'sqlalchemy.dialects': [
-              'solr = sqlalchemy_solr.base:SolrDialect',
+              'solr = sqlalchemy_solr.sasolr:SolrDialect_sasolr',
           ]
       }
     )
