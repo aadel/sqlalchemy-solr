@@ -38,25 +38,15 @@ except ImportError:
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
 
 _type_map = {
-    'bit': types.BOOLEAN,
-    'bigint': types.BIGINT,
     'binary': types.LargeBinary,
-    'boolean': types.BOOLEAN,
-    'date': types.DATE,
-    'decimal': types.DECIMAL,
-    'double': types.FLOAT,
-    'int': types.INTEGER,
-    'integer': types.INTEGER,
-    'interval': types.Interval,
-    'smallint': types.SMALLINT,
-    'timestamp': types.TIMESTAMP,
-    'time': types.TIME,
-    'varchar': types.String,
-    'character varying': types.String,
-    'any': types.String,
-    'map': types.UserDefinedType,
-    'list': types.UserDefinedType,
-    'float8': types.FLOAT,
+    'boolean': types.Boolean,
+    'pdate': types.DateTime,
+    'pdouble': types.Float,
+    'pint': types.Integer,
+    'plong': types.BigInteger,
+    'string': types.String,
+    'text_general': types.Text,
+    'pfloat': types.Float
 }
 
 class SolrCompiler(compiler.SQLCompiler):
@@ -195,18 +185,17 @@ class SolrDialect(default.DefaultDialect):
         
         local_payload = api_globals._PAYLOAD.copy()
         local_payload['action'] = 'LIST'
-        result = session.get(
-            connection.raw_connection().proto + connection.raw_connection().host + ":" + str(connection.raw_connection().port) + "/" + 
-                connection.raw_connection().server_path + "/admin/collections",
-            params=local_payload,
-            headers=api_globals._HEADER
-        )
         try:
+            result = session.get(
+                connection.raw_connection().proto + connection.raw_connection().host + ":" + str(connection.raw_connection().port) + "/" + 
+                    connection.raw_connection().server_path + "/admin/collections",
+                params=local_payload,
+                headers=api_globals._HEADER
+            )
             tables_names = result.json()['collections']
-            print(tables_names)
         except Exception as ex:
             logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
-        print(result)
+
         return tuple(tables_names)
 
     def get_view_names(self, connection, schema=None, **kw):
@@ -240,67 +229,27 @@ class SolrDialect(default.DefaultDialect):
         return dt
 
     def get_columns(self, connection, table_name, schema=None, **kw):
-        result = []
+        columns = []
 
-        plugin_type = self.get_plugin_type(connection, schema)
+        session = Session()
 
-        if plugin_type == "file":
-            file_name = schema + "." + table_name
-            quoted_file_name = self.identifier_preparer.format_solr_table(file_name, isFile=True)
-            q = "SELECT * FROM {file_name} LIMIT 1".format(file_name=quoted_file_name)
-            column_metadata = connection.execute(q).cursor.description
-
-            for row in column_metadata:
-
-                #  Get rid of precision information in data types
-                data_type = row[1].lower()
-                pattern = r"[a-zA-Z]+\(\d+, \d+\)"
-
-                if re.search(pattern, data_type):
-                    data_type = data_type.split('(')[0]
-                solr_data_type = self.get_data_type(data_type)
-                column = {
-                    "name": row[0],
-                    "type": solr_data_type,
-                    "longtype": solr_data_type
-                }
-                result.append(column)
-            return result
-
-        elif "SELECT " in table_name:
-            q = "SELECT * FROM ({table_name}) LIMIT 1".format(table_name=table_name)
-        else:
-            quoted_schema = self.identifier_preparer.format_solr_table(schema + "." + table_name, isFile=False)
-            q = "DESCRIBE {table_name}".format(table_name=quoted_schema)
-
-        query_results = connection.execute(q)
-
-        for row in query_results:
-            column = {
-                "name": row[0],
-                "type": self.get_data_type(row[1].lower()),
-                "longType": self.get_data_type(row[1].lower())
-            }
-            result.append(column)
-        return result
-
-    def get_plugin_type(self, connection, plugin=None):
-        if plugin is None:
-            return
-
+        local_payload = api_globals._PAYLOAD.copy()
+        local_payload['action'] = 'LIST'
         try:
-            query = "SELECT SCHEMA_NAME, TYPE FROM INFORMATION_SCHEMA.`SCHEMATA` WHERE SCHEMA_NAME LIKE '%" + plugin.replace(
-                '`', '') + "%'"
-
-            rows = connection.execute(query).fetchall()
-            plugin_type = ""
-            for row in rows:
-                plugin_type = row[1]
-                plugin_name = row[0]
-
-            return plugin_type
-
+            result = session.get(
+                connection.raw_connection().proto + connection.raw_connection().host + ":" + str(connection.raw_connection().port) + "/" + 
+                    connection.raw_connection().server_path + "/" + table_name + "/admin/luke",
+                params=local_payload,
+                headers=api_globals._HEADER
+            )
+            fields = result.json()['fields']
+            for field in fields:
+                column = {
+                    "name": field,
+                    "type": self.get_data_type(fields[field]['type']),
+                    "longType": self.get_data_type(fields[field]['type'])
+                }
+                columns.append(column)
+            return columns
         except Exception as ex:
-            logging.error("Error in SolrDialect_http.get_plugin_type :: " + str(ex))
-            return False
-
+            logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
