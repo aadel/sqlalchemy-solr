@@ -27,7 +27,7 @@ setup(name='sqlalchemy_solr',
       description="Apache Solr for SQLAlchemy",
       long_description=open(readme).read(),
       classifiers=[
-          'Development Status :: 1 - Alpha',
+          'Development Status :: 3 - Alpha',
           'Environment :: Console',
           'Intended Audience :: Developers',
           'Programming Language :: Python',
@@ -55,7 +55,8 @@ setup(name='sqlalchemy_solr',
       zip_safe=False,
       entry_points={
           'sqlalchemy.dialects': [
-              'solr = sqlalchemy_solr.sasolr:SolrDialect_sasolr',
+              'solr = sqlalchemy_solr.http:SolrDialect_http',
+              'solr.http = sqlalchemy_solr.http:SolrDialect_http',
           ]
       }
     )

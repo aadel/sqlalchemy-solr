@@ -7,7 +7,8 @@ from pandas import to_datetime
 import re
 
 from . import api_globals
-from .api_exceptions import Error, Warning, AuthError, DatabaseError, ProgrammingError, CursorClosedException, ConnectionClosedException
+from .api_exceptions import Error, Warning, AuthError, DatabaseError, \
+    ProgrammingError, CursorClosedException, ConnectionClosedException
 
 apilevel = '2.0'
 threadsafety = 3
@@ -17,10 +18,12 @@ default_storage_plugin = ""
 # Python DB API 2.0 classes
 class Cursor(object):
 
-    def __init__(self, host, db, port, proto, session, conn):
+    def __init__(self, host, db, server_path, collection, port, proto, session, conn):
 
         self.arraysize = 1
         self.db = db
+        self.server_path = server_path
+        self.collection = collection
         self.description = None
         self.host = host
         self.port = port
@@ -33,15 +36,6 @@ class Cursor(object):
         self._resultSetStatus = None
         self.rowcount = -1
 
-        db_parts = db.split('.')
-
-        # Server path mapping
-        if db_parts[0]:
-            self.server_path = db_parts[0]
-        
-        # Mapping database to collection
-        if db_parts[1]:
-            self.collection = db_parts[1]
 
     # Decorator for methods which require connection
     def connected(func):
@@ -77,13 +71,12 @@ class Cursor(object):
         return query
 
     @staticmethod
-    def submit_query(query, db, host, port, proto, session):
+    def submit_query(query, host, port, proto, server_path, collection, session):
         local_payload = api_globals._PAYLOAD.copy()
-        local_payload["query"] = query
-        print('Connecting to ' + proto + host + ":" + str(port) + "/" + self.collection + "/" + db + "/sql")
+        local_payload["stmt"] = query
         return session.get(
-            proto + host + ":" + str(port) + "/" + self.collection + "/" + db + "/sql",
-            params=local_payload["query"],
+            proto + host + ":" + str(port) + "/" + server_path + "/" + collection + "/sql",
+            params=local_payload,
             headers=api_globals._HEADER
         )
 
@@ -125,10 +118,11 @@ class Cursor(object):
     def execute(self, operation, parameters=()):
         result = self.submit_query(
             self.substitute_in_query(operation, parameters),
-            self.db,
             self.host,
             self.port,
             self.proto,
+            self.server_path,
+            self.collection,
             self._session
         )
 
@@ -142,14 +136,43 @@ class Cursor(object):
             print("************************************")
             raise ProgrammingError(result.json().get("errorMessage", "ERROR"), result.status_code)
         else:
+            rows = result.json()["result-set"]['docs']
+            columns = []
+            if "EOF" in rows[-1]:
+                del rows[-1]
+            if len(rows) > 0:
+                columns=rows[0].keys()
+            
             self._resultSet = (
-                DataFrame(
-                    result.json()["result-set"]["docs"]
-                ).fillna(value=nan)
+                DataFrame(data=rows, columns=columns).fillna(value=nan)
             )
 
+            column_names, column_types = self.parse_column_types(self._resultSet)
+
+            # Get column metadata
+            column_metadata = list(map(
+                lambda cname, ctype: {"column": cname, "type": ctype}, column_names, column_types))
+
+            self._resultSetMetadata = column_metadata
             self.rowcount = len(self._resultSet)
             self._resultSetStatus = iter(range(len(self._resultSet)))
+            try:
+                self.description = tuple(
+                    zip(
+                        column_names,
+                        column_types,
+                        [None for i in range(len(self._resultSet.dtypes.index))],
+                        [None for i in range(len(self._resultSet.dtypes.index))],
+                        [None for i in range(len(self._resultSet.dtypes.index))],
+                        [None for i in range(len(self._resultSet.dtypes.index))],
+                        [True for i in range(len(self._resultSet.dtypes.index))]
+                    )
+                )
+                return self
+            except Exception as ex:
+                print("************************************")
+                print("Error in Cursor.execute", str(ex))
+                print("************************************")
 
     @connected
     def fetchone(self):
@@ -206,28 +229,23 @@ class Cursor(object):
     def get_query_metadata(self):
         return self._resultSetMetadata
 
+    def get_default_plugin(self):
+        return self.default_storage_plugin
+
     def __iter__(self):
         return self._resultSet.iterrows()
 
 
 class Connection(object):
-    def __init__(self, host, db, port, proto, session):
+    def __init__(self, host, db, server_path, collection, port, proto, session):
         self.host = host
         self.db = db
+        self.server_path = server_path
+        self.collection = collection
         self.proto = proto
         self.port = port
         self._session = session
         self._connected = True
-
-        db_parts = db.split('.')
-        
-        # Server path mapping
-        if db_parts[0]:
-            self.server_path = db_parts[0]
-        
-        # Mapping database to collection
-        if db_parts[1]:
-            self.collection = db_parts[1]
 
     # Decorator for methods which require connection
     def connected(func):
@@ -282,13 +300,13 @@ class Connection(object):
 
     @connected
     def cursor(self):
-        return Cursor(self.host, self.db, self.port, self.proto, 
-            self._session, self)
+        return Cursor(self.host, self.db, self.server_path, self.collection, 
+            self.port, self.proto, self._session, self)
 
 
-def connect(host, port=8983, db=None, collection=None, server_path=None, 
-            use_ssl=False, solruser=None, solrpass=None, verify_ssl=False, ca_certs=None):
-    
+def connect(host, port=8047, db=None, server_path='solr', collection=None, 
+        use_ssl=False, verify_ssl=False, ca_certs=None):
+
     session = Session()
 
     if verify_ssl is False:
@@ -303,63 +321,20 @@ def connect(host, port=8983, db=None, collection=None, server_path=None,
         proto = "https://"
     else:
         proto = "http://"
-    print(host)
-    print(db)
-    print(collection)
-    print(server_path)
-    
-    # db_parts = db.split('.')
-    
-    # # Server path mapping
-    # if db_parts[0]:
-    #     server_path = db_parts[0]
-    
-    # # Mapping database to collection
-    # if db_parts[1]:
-    #     collection = db_parts[1]
 
-    local_url = "/" + server_path + "/admin/metrics"
-    local_payload = api_globals._PAYLOAD.copy()
-    local_payload["query"] = ""
-    print("Connecting to " + "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url))
-    response = session.get(
-        "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url),
-        params=local_payload["query"],
-        headers=api_globals._HEADER
-    )
+    if collection is not None:
+        local_url = "/" + server_path + "/" + collection + "/select"
 
-    if response.status_code != 200:
-        print("************************************")
-        print("Error in connect")
-        print("************************************")
-        raise DatabaseError(str(response.json()["errorMessage"]), response.status_code)
-    else:
-        raw_data = response.text
-        if raw_data.find("Invalid username/password credentials") >= 0:
+        response = session.get(
+            "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url),
+            headers=api_globals._HEADER
+        )
+
+        if response.status_code != 200:
             print("************************************")
-            print("Error in connect: ", response.text)
+            print("Error in connect")
+            print( "Response code:", response.status_code)
             print("************************************")
-            raise AuthError(str(raw_data), response.status_code)
+            raise DatabaseError(str(response.json()["errorMessage"]), response.status_code)
 
-        if db is not None:
-            print('DB: ' + db)
-            local_payload = api_globals._PAYLOAD.copy()
-
-            local_url = "/" + server_path + "/" + collection + "/select"
-            local_payload["query"] = "SELECT 'test' FROM (VALUES(1))"
-
-            print("Connecting to " + "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url))
-            response = session.get(
-                "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url),
-                params=local_payload["query"],
-                headers=api_globals._HEADER
-            )
-
-            if response.status_code != 200:
-                print("************************************")
-                print("Error in connect")
-                print( "Response code:", response.status_code)
-                print("************************************")
-                raise DatabaseError(str(response.json()["errorMessage"]), response.status_code)
-
-        return Connection(host, db, port, proto, session)
+    return Connection(host, db, server_path, collection, port, proto, session)

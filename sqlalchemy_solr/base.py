@@ -25,6 +25,8 @@ from sqlalchemy import exc, pool, types
 from sqlalchemy.engine import default
 from sqlalchemy.sql import compiler
 from sqlalchemy import inspect
+from requests import Session
+from sqlalchemy_solr.solrdbapi import api_globals
 import re
 import logging
 
@@ -59,14 +61,8 @@ _type_map = {
 
 class SolrCompiler(compiler.SQLCompiler):
 
-    def visit_char_length_func(self, fn, **kw):
-        return 'length{}'.format(self.function_argspec(fn, **kw))
-
-    def visit_table(self, table, asfrom=False, **kwargs):
-        print(table)
-
-    def visit_tablesample(self, tablesample, asfrom=False, **kw):
-        print(tablesample)
+    def default_from(self):
+        raise NotImplementedError
 
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
@@ -113,6 +109,8 @@ class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     def __init__(self, dialect):
         super(SolrIdentifierPreparer, self).__init__(dialect, initial_quote='`', final_quote='`')
 
+
+
 class SolrDialect(default.DefaultDialect):
     name = 'solrdbapi'
     driver = 'rest'
@@ -140,34 +138,36 @@ class SolrDialect(default.DefaultDialect):
         return module
 
     def create_connect_args(self, url, **kwargs):
-        print('connect args ' + url.database)
-        url_port = url.port or 8983
+        url_port = url.port or 8047
         qargs = {'host': url.host, 'port': url_port}
 
         try:
-            db_parts = url.database.split('/')
-            print(db_parts)
-
-            # Server path mapping
-            if db_parts[0]:
-                server_path = db_parts[0]
-
-            # Mapping database to collection
-            if db_parts[1]:
-                collection = db_parts[1]
+            db_parts = (url.database or 'solr').split('/')
+            db = ".".join(db_parts)
 
             # Save this for later use.
             self.host = url.host
             self.port = url_port
-            self.collection = collection
-            self.server_path = server_path
+            self.username = url.username
+            self.password = url.password
+            self.db = db
+
+            # Get Storage Plugin Info:
+            if db_parts[0]:
+                self.storage_plugin = db_parts[0]
+
+            if len(db_parts) > 1:
+                self.workspace = db_parts[1]
 
             qargs.update(url.query)
-            qargs['db'] = url.database
-            qargs['collection'] = collection
-            qargs['server_path'] = server_path
+            qargs['db'] = db
+            if url.username:
+                qargs['solruser'] = url.username
+                qargs['solrpass'] = ""
+                if url.password:
+                    qargs['solrpass'] = url.password
         except Exception as ex:
-            logging.error("Error in SolrDialect.create_connect_args :: " + str(ex))
+            logging.error("Error in SolrDialect_http.create_connect_args :: " + str(ex))
 
         return [], qargs
 
@@ -188,19 +188,37 @@ class SolrDialect(default.DefaultDialect):
         return []
 
     def get_schema_names(self, connection, **kw):
-        """Solr has no support for SHOW DATABASES.  Retunrs an empty list."""
-        return []
-
+        return tuple(['default'])
+        
     def get_table_names(self, connection, schema=None, **kw):
-        """Solr has no support for SHOW TABLES.  Retunrs an empty list."""
-        return []
+        session = Session()
+        
+        local_payload = api_globals._PAYLOAD.copy()
+        local_payload['action'] = 'LIST'
+        result = session.get(
+            connection.raw_connection().proto + connection.raw_connection().host + ":" + str(connection.raw_connection().port) + "/" + 
+                connection.raw_connection().server_path + "/admin/collections",
+            params=local_payload,
+            headers=api_globals._HEADER
+        )
+        try:
+            tables_names = result.json()['collections']
+            print(tables_names)
+        except Exception as ex:
+            logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
+        print(result)
+        return tuple(tables_names)
 
     def get_view_names(self, connection, schema=None, **kw):
         return []
 
     def has_table(self, connection, table_name, schema=None):
-        """Solr has no support for has_table.  Retunrs False."""
-        return False
+        try:
+            self.get_columns(connection, table_name, schema)
+            return True
+        except exc.NoSuchTableError:
+            logging.error("Error in SolrDialect_http.has_table :: " + exc.NoSuchTableError)
+            return False
 
     def _check_unicode_returns(self, connection, additional_tests=None):
         # requests gives back Unicode strings
@@ -222,6 +240,67 @@ class SolrDialect(default.DefaultDialect):
         return dt
 
     def get_columns(self, connection, table_name, schema=None, **kw):
-        """Solr has no support for DESCRIBE.  Retunrs an empty list."""
-        return []
+        result = []
+
+        plugin_type = self.get_plugin_type(connection, schema)
+
+        if plugin_type == "file":
+            file_name = schema + "." + table_name
+            quoted_file_name = self.identifier_preparer.format_solr_table(file_name, isFile=True)
+            q = "SELECT * FROM {file_name} LIMIT 1".format(file_name=quoted_file_name)
+            column_metadata = connection.execute(q).cursor.description
+
+            for row in column_metadata:
+
+                #  Get rid of precision information in data types
+                data_type = row[1].lower()
+                pattern = r"[a-zA-Z]+\(\d+, \d+\)"
+
+                if re.search(pattern, data_type):
+                    data_type = data_type.split('(')[0]
+                solr_data_type = self.get_data_type(data_type)
+                column = {
+                    "name": row[0],
+                    "type": solr_data_type,
+                    "longtype": solr_data_type
+                }
+                result.append(column)
+            return result
+
+        elif "SELECT " in table_name:
+            q = "SELECT * FROM ({table_name}) LIMIT 1".format(table_name=table_name)
+        else:
+            quoted_schema = self.identifier_preparer.format_solr_table(schema + "." + table_name, isFile=False)
+            q = "DESCRIBE {table_name}".format(table_name=quoted_schema)
+
+        query_results = connection.execute(q)
+
+        for row in query_results:
+            column = {
+                "name": row[0],
+                "type": self.get_data_type(row[1].lower()),
+                "longType": self.get_data_type(row[1].lower())
+            }
+            result.append(column)
+        return result
+
+    def get_plugin_type(self, connection, plugin=None):
+        if plugin is None:
+            return
+
+        try:
+            query = "SELECT SCHEMA_NAME, TYPE FROM INFORMATION_SCHEMA.`SCHEMATA` WHERE SCHEMA_NAME LIKE '%" + plugin.replace(
+                '`', '') + "%'"
+
+            rows = connection.execute(query).fetchall()
+            plugin_type = ""
+            for row in rows:
+                plugin_type = row[1]
+                plugin_name = row[0]
+
+            return plugin_type
+
+        except Exception as ex:
+            logging.error("Error in SolrDialect_http.get_plugin_type :: " + str(ex))
+            return False
 

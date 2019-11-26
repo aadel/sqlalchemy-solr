@@ -38,7 +38,7 @@ try:
 except ImportError:
     from sqlalchemy.databases.mysql import MSBigInteger as BigInteger
 
-class SolrDialect_sasolr(SolrDialect):
+class SolrDialect_http(SolrDialect):
 
     name = 'solrdbapi'
     driver = 'rest'
@@ -66,20 +66,22 @@ class SolrDialect_sasolr(SolrDialect):
         return module
 
     def create_connect_args(self, url, **kwargs):
-        url_port = url.port or 8983
+        url_port = url.port or 8047
         qargs = {'host': url.host, 'port': url_port}
 
         try:
             db_parts = url.database.split('/')
             db = ".".join(db_parts)
 
-            # Server path mapping
+            # Mapping server path and collection
             if db_parts[0]:
                 server_path = db_parts[0]
-
-            # Mapping database to collection
+            else:
+                raise AttributeError('Missing server path')
             if db_parts[1]:
                 collection = db_parts[1]
+            else:
+                raise AttributeError('Missing collection')
 
             # Save this for later use.
             self.host = url.host
@@ -87,16 +89,16 @@ class SolrDialect_sasolr(SolrDialect):
             self.username = url.username
             self.password = url.password
             self.db = db
-            self.collection = collection
             self.server_path = server_path
+            self.collection = collection
 
             qargs.update(url.query)
-            qargs['db'] = url.database
-            qargs['collection'] = collection
+            qargs['db'] = db
             qargs['server_path'] = server_path
+            qargs['collection'] = collection
+
         except Exception as ex:
             print("************************************")
-            print("Error in SolrDialect_sasolr.create_connect_args :: ", str(ex))
+            print("Error in SolrDialect_http.create_connect_args :: ", str(ex))
             print("************************************")
-            raise ex
         return [], qargs
