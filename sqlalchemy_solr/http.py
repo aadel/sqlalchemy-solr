@@ -78,6 +78,12 @@ class SolrDialect_http(SolrDialect):
             db_parts = url.database.split('/')
             db = ".".join(db_parts)
 
+            self.proto = "http://"
+
+            if 'use_ssl' in kwargs:
+                if kwargs['use_ssl'] in [True, 'True', 'true']:
+                    self.proto = "https://"
+                    
             # Mapping server path and collection
             if db_parts[0]:
                 server_path = db_parts[0]
