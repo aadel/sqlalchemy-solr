@@ -25,9 +25,7 @@ from sqlalchemy import exc, pool, types
 from sqlalchemy.engine import default
 from sqlalchemy.sql import compiler
 from sqlalchemy import inspect
-from requests import Session
 from sqlalchemy_solr.solrdbapi import api_globals
-import re
 import logging
 
 try:
@@ -52,7 +50,10 @@ _type_map = {
 class SolrCompiler(compiler.SQLCompiler):
 
     def default_from(self):
-        raise NotImplementedError
+        """Called when a ``SELECT`` statement has no froms,
+        and no ``FROM`` clause is to be appended.
+        """
+        return " FROM (values(1))"
 
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
@@ -127,40 +128,6 @@ class SolrDialect(default.DefaultDialect):
         import sqlalchemy_solr.solrdbapi as module
         return module
 
-    def create_connect_args(self, url, **kwargs):
-        url_port = url.port or 8047
-        qargs = {'host': url.host, 'port': url_port}
-
-        try:
-            db_parts = (url.database or 'solr').split('/')
-            db = ".".join(db_parts)
-
-            # Save this for later use.
-            self.host = url.host
-            self.port = url_port
-            self.username = url.username
-            self.password = url.password
-            self.db = db
-
-            # Get Storage Plugin Info:
-            if db_parts[0]:
-                self.storage_plugin = db_parts[0]
-
-            if len(db_parts) > 1:
-                self.workspace = db_parts[1]
-
-            qargs.update(url.query)
-            qargs['db'] = db
-            if url.username:
-                qargs['solruser'] = url.username
-                qargs['solrpass'] = ""
-                if url.password:
-                    qargs['solrpass'] = url.password
-        except Exception as ex:
-            logging.error("Error in SolrDialect_http.create_connect_args :: " + str(ex))
-
-        return [], qargs
-
     def do_rollback(self, dbapi_connection):
         # No transactions for Solr
         pass
@@ -179,24 +146,6 @@ class SolrDialect(default.DefaultDialect):
 
     def get_schema_names(self, connection, **kw):
         return tuple(['default'])
-        
-    def get_table_names(self, connection, schema=None, **kw):
-        session = Session()
-        
-        local_payload = api_globals._PAYLOAD.copy()
-        local_payload['action'] = 'LIST'
-        try:
-            result = session.get(
-                connection.raw_connection().proto + connection.raw_connection().host + ":" + str(connection.raw_connection().port) + "/" + 
-                    connection.raw_connection().server_path + "/admin/collections",
-                params=local_payload,
-                headers=api_globals._HEADER
-            )
-            tables_names = result.json()['collections']
-        except Exception as ex:
-            logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
-
-        return tuple(tables_names)
 
     def get_view_names(self, connection, schema=None, **kw):
         return []
@@ -227,29 +176,3 @@ class SolrDialect(default.DefaultDialect):
         except:
             dt = types.UserDefinedType
         return dt
-
-    def get_columns(self, connection, table_name, schema=None, **kw):
-        columns = []
-
-        session = Session()
-
-        local_payload = api_globals._PAYLOAD.copy()
-        local_payload['action'] = 'LIST'
-        try:
-            result = session.get(
-                connection.raw_connection().proto + connection.raw_connection().host + ":" + str(connection.raw_connection().port) + "/" + 
-                    connection.raw_connection().server_path + "/" + table_name + "/admin/luke",
-                params=local_payload,
-                headers=api_globals._HEADER
-            )
-            fields = result.json()['fields']
-            for field in fields:
-                column = {
-                    "name": field,
-                    "type": self.get_data_type(fields[field]['type']),
-                    "longType": self.get_data_type(fields[field]['type'])
-                }
-                columns.append(column)
-            return columns
-        except Exception as ex:
-            logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))

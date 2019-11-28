@@ -25,13 +25,17 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from sqlalchemy import pool
 from sqlalchemy.engine import default
+from requests import Session
 from .base import SolrDialect, SolrIdentifierPreparer, SolrCompiler
+from sqlalchemy_solr.solrdbapi import api_globals
+import logging
 
 try:
     from sqlalchemy.sql.compiler import SQLCompiler
 except ImportError:
     from sqlalchemy.sql.compiler import DefaultCompiler as SQLCompiler
 
+logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
 
 try:
     from sqlalchemy.types import BigInteger
@@ -66,6 +70,7 @@ class SolrDialect_http(SolrDialect):
         return module
 
     def create_connect_args(self, url, **kwargs):
+        
         url_port = url.port or 8047
         qargs = {'host': url.host, 'port': url_port}
 
@@ -102,3 +107,47 @@ class SolrDialect_http(SolrDialect):
             print("Error in SolrDialect_http.create_connect_args :: ", str(ex))
             print("************************************")
         return [], qargs
+
+    def get_table_names(self, connection, schema=None, **kw):
+        session = Session()
+        
+        local_payload = api_globals._PAYLOAD.copy()
+        local_payload['action'] = 'LIST'
+        try:
+            result = session.get(
+                self.proto + self.host + ":" + str(self.port) + "/" + 
+                    self.server_path + "/admin/collections",
+                params=local_payload,
+                headers=api_globals._HEADER
+            )
+            tables_names = result.json()['collections']
+        except Exception as ex:
+            logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
+
+        return tuple(tables_names)
+
+    def get_columns(self, connection, table_name, schema=None, **kw):
+        columns = []
+
+        session = Session()
+
+        local_payload = api_globals._PAYLOAD.copy()
+        local_payload['action'] = 'LIST'
+        try:
+            result = session.get(
+                self.proto + self.host + ":" + str(self.port) + "/" + 
+                    self.server_path + "/" + table_name + "/admin/luke",
+                params=local_payload,
+                headers=api_globals._HEADER
+            )
+            fields = result.json()['fields']
+            for field in fields:
+                column = {
+                    "name": field,
+                    "type": self.get_data_type(fields[field]['type']),
+                    "longType": self.get_data_type(fields[field]['type'])
+                }
+                columns.append(column)
+            return columns
+        except Exception as ex:
+            logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
