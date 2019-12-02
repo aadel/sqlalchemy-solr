@@ -107,6 +107,8 @@ class SolrDialect_http(SolrDialect):
             qargs['db'] = db
             qargs['server_path'] = server_path
             qargs['collection'] = collection
+            qargs['username'] = url.username
+            qargs['password'] = url.password
 
         except Exception as ex:
             print("************************************")
@@ -124,7 +126,8 @@ class SolrDialect_http(SolrDialect):
                 self.proto + self.host + ":" + str(self.port) + "/" + 
                     self.server_path + "/admin/collections",
                 params=local_payload,
-                headers=api_globals._HEADER
+                headers=api_globals._HEADER,
+                auth=(self.username, self.password)
             )
             tables_names = result.json()['collections']
         except Exception as ex:
@@ -144,7 +147,8 @@ class SolrDialect_http(SolrDialect):
                 self.proto + self.host + ":" + str(self.port) + "/" + 
                     self.server_path + "/" + table_name + "/admin/luke",
                 params=local_payload,
-                headers=api_globals._HEADER
+                headers=api_globals._HEADER,
+                auth=(self.username, self.password)
             )
             fields = result.json()['fields']
             for field in fields:

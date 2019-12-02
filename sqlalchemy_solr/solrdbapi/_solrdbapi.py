@@ -18,10 +18,13 @@ default_storage_plugin = ""
 # Python DB API 2.0 classes
 class Cursor(object):
 
-    def __init__(self, host, db, server_path, collection, port, proto, session, conn):
+    def __init__(self, host, db, username, password, server_path, collection, 
+            port, proto, session, conn):
 
         self.arraysize = 1
         self.db = db
+        self.username = username
+        self.password = password
         self.server_path = server_path
         self.collection = collection
         self.description = None
@@ -71,13 +74,14 @@ class Cursor(object):
         return query
 
     @staticmethod
-    def submit_query(query, host, port, proto, server_path, collection, session):
+    def submit_query(query, host, port, proto, username, password, server_path, collection, session):
         local_payload = api_globals._PAYLOAD.copy()
         local_payload["stmt"] = query
         return session.get(
             proto + host + ":" + str(port) + "/" + server_path + "/" + collection + "/sql",
             params=local_payload,
-            headers=api_globals._HEADER
+            headers=api_globals._HEADER,
+            auth=(username, password)
         )
 
     @staticmethod
@@ -121,6 +125,8 @@ class Cursor(object):
             self.host,
             self.port,
             self.proto,
+            self.username,
+            self.password,
             self.server_path,
             self.collection,
             self._session
@@ -237,9 +243,13 @@ class Cursor(object):
 
 
 class Connection(object):
-    def __init__(self, host, db, server_path, collection, port, proto, session):
+    def __init__(self, host, db, username, password, server_path, 
+            collection, port, proto, session):
+
         self.host = host
         self.db = db
+        self.username = username
+        self.password = password
         self.server_path = server_path
         self.collection = collection
         self.proto = proto
@@ -300,12 +310,14 @@ class Connection(object):
 
     @connected
     def cursor(self):
-        return Cursor(self.host, self.db, self.server_path, self.collection, 
-            self.port, self.proto, self._session, self)
+        return Cursor(self.host, self.db, self.username, self.password, 
+            self.server_path, self.collection, self.port, self.proto,
+            self._session, self)
 
 
-def connect(host, port=8047, db=None, server_path='solr', collection=None, 
-        use_ssl=False, verify_ssl=False, ca_certs=None):
+def connect(host, port=8047, db=None, username=None, password=None,
+        server_path='solr', collection=None, use_ssl=False, 
+        verify_ssl=False, ca_certs=None):
 
     session = Session()
 
@@ -327,7 +339,8 @@ def connect(host, port=8047, db=None, server_path='solr', collection=None,
 
         response = session.get(
             "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url),
-            headers=api_globals._HEADER
+            headers=api_globals._HEADER,
+            auth=(username, password)
         )
 
         if response.status_code != 200:
@@ -337,4 +350,5 @@ def connect(host, port=8047, db=None, server_path='solr', collection=None,
             print("************************************")
             raise DatabaseError(str(response.json()["errorMessage"]), response.status_code)
 
-    return Connection(host, db, server_path, collection, port, proto, session)
+    return Connection(host, db, username, password, server_path, 
+            collection, port, proto, session)
