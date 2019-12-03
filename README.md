@@ -1,8 +1,6 @@
 # Apache Solr dialect for SQLAlchemy
 
-A dialect for Apache Solr that can be used with Apache Superset.
-
-https://superset.incubator.apache.org
+A dialect for Apache Solr that can be used with [Apache Superset](https://superset.incubator.apache.org).
 
 ## Installation
 Installing the dialect is straightforward.  Simply:
@@ -10,7 +8,6 @@ Installing the dialect is straightforward.  Simply:
 2.  Navigate to the directory where you cloned the repository
 3.  Run the python `setup.py` to install
 
-Examples are shown below
 ```
 git clone https://github.com/aadel/sqlalchemy-solr
 cd sqlalchemy-solr
@@ -19,10 +16,10 @@ python3 setup.py install
 ```
 
 ## Usage
-To use Solr with SQLAlchemy, the following URL pattern can be used:
+To connect to Solr with SQLAlchemy, the following URL pattern can be used:
 
 ```
-solr://<host>:<port>/solr/<collection>
+solr://<username>:<password>@<host>:<port>/solr/<collection>[?use_ssl=true|false]
 ```
 
 ## References
