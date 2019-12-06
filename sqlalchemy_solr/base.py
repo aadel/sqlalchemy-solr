@@ -24,6 +24,8 @@ from __future__ import unicode_literals
 from sqlalchemy import exc, pool, types
 from sqlalchemy.engine import default
 from sqlalchemy.sql import compiler
+from sqlalchemy.sql import expression, operators
+from dateutil import parser
 from sqlalchemy import inspect
 from sqlalchemy_solr.solrdbapi import api_globals
 import logging
@@ -55,6 +57,31 @@ class SolrCompiler(compiler.SQLCompiler):
         """
         return " FROM (values(1))"
 
+    def visit_binary(self, binary, override_operator=None, eager_grouping=False, **kw):
+        if binary == kw['ge']:
+            return "True"
+
+        if kw['ge'] is not None and kw['ge'].left == binary.left and binary.operator == operators.le:
+            try:
+                udatetime = parser.parse(binary.right.text)
+                ldatetime = parser.parse(kw['ge'].right.text)
+                binary.right = expression.TextClause("'[" + ldatetime.isoformat() + 
+                    "Z TO " + udatetime.isoformat() + "Z]'")
+                binary.operator = operators.eq
+                return super().visit_binary(binary, override_operator, eager_grouping, **kw)
+            except ValueError:
+                return super().visit_binary(binary, override_operator, eager_grouping, **kw)
+        else:
+            return super().visit_binary(binary, override_operator, eager_grouping, **kw)
+
+    def visit_clauselist(self, clauselist, **kw):
+        if clauselist.operator == operators.and_:
+            for c in clauselist.clauses:
+                if isinstance(c, expression.BinaryExpression):
+                    if c.operator == operators.ge:
+                        kw['ge'] = c
+
+        return super().visit_clauselist(clauselist, **kw)
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     reserved_words = compiler.RESERVED_WORDS.copy()
