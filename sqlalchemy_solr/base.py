@@ -51,6 +51,9 @@ _type_map = {
 
 class SolrCompiler(compiler.SQLCompiler):
 
+    merge_ops = (operators.ge, operators.gt, operators.le, operators.lt)
+    bounds = {operators.ge: '[', operators.gt: '{', operators.le: ']', operators.lt: '}'}
+
     def default_from(self):
         """Called when a ``SELECT`` statement has no froms,
         and no ``FROM`` clause is to be appended.
@@ -58,28 +61,57 @@ class SolrCompiler(compiler.SQLCompiler):
         return " FROM (values(1))"
 
     def visit_binary(self, binary, override_operator=None, eager_grouping=False, **kw):
-        if binary == kw['ge']:
-            return "True"
+        if binary.operator not in self.merge_ops:
+            return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
-        if kw['ge'] is not None and kw['ge'].left == binary.left and binary.operator == operators.le:
-            try:
-                udatetime = parser.parse(binary.right.text)
-                ldatetime = parser.parse(kw['ge'].right.text)
-                binary.right = expression.TextClause("'[" + ldatetime.isoformat() + 
-                    "Z TO " + udatetime.isoformat() + "Z]'")
-                binary.operator = operators.eq
-                return super().visit_binary(binary, override_operator, eager_grouping, **kw)
-            except ValueError:
-                return super().visit_binary(binary, override_operator, eager_grouping, **kw)
+        if str(binary.left) in kw:
+            if kw[str(binary.left)].keys() & [operators.ge, operators.gt]:
+                if kw[str(binary.left)].keys() & [operators.le, operators.lt]:
+                    if binary.operator in (operators.ge, operators.gt):
+                        # Boundary to be merged
+                        return "TRUE"
+
+        try:
+            datetime = parser.parse(binary.right.text)
+        except ValueError:
+            return super().visit_binary(binary, override_operator, eager_grouping, **kw)
         else:
+            if binary.operator in (operators.ge, operators.gt):
+                ldatetime = datetime
+                lbound = self.bounds[binary.operator]
+                if str(binary.left) in kw:
+                    if kw[str(binary.left)].keys() & [operators.le, operators.lt]:
+                        ubound, uoperator = (']', operators.le) \
+                            if operators.le in kw[str(binary.left)] else ('}', operators.lt)
+                        udatetime = parser.parse(kw[str(binary.left)][uoperator].right.text)
+                    else:
+                        ubound, udatetime = "]", "*"
+            else:
+                udatetime = datetime
+                ubound = self.bounds[binary.operator]
+                if str(binary.left) in kw:
+                    if kw[str(binary.left)].keys() & [operators.ge, operators.gt]:
+                        lbound, loperator = ('[', operators.ge) \
+                            if operators.ge in kw[str(binary.left)] else ('{', operators.gt)
+                        ldatetime = parser.parse(kw[str(binary.left)][loperator].right.text)
+                    else:
+                        lbound, ldatetime = "[", "*"
+
+            binary.right = expression.TextClause("'" + lbound + ldatetime.isoformat()
+                + "Z TO " + udatetime.isoformat() + "Z" + ubound + "'")
+            binary.operator = operators.eq
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
     def visit_clauselist(self, clauselist, **kw):
         if clauselist.operator == operators.and_:
             for c in clauselist.clauses:
                 if isinstance(c, expression.BinaryExpression):
-                    if c.operator == operators.ge:
-                        kw['ge'] = c
+                    kw[str(c.left)] = {} if str(c.left) not in kw else kw[str(c.left)]
+                    try:
+                        parser.parse(c.right.text)
+                        kw[str(c.left)][c.operator] = c
+                    except ValueError:
+                        continue
 
         return super().visit_clauselist(clauselist, **kw)
 
