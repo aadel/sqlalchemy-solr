@@ -7,6 +7,7 @@ Installing the dialect is straightforward.  Simply:
 1.  Clone or download this repository
 2.  Navigate to the directory where you cloned the repository
 3.  Run the python `setup.py` to install
+4.  Restart Superset
 
 ```
 git clone https://github.com/aadel/sqlalchemy-solr
