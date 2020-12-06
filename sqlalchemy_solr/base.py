@@ -25,6 +25,7 @@ from sqlalchemy import exc, pool, types
 from sqlalchemy.engine import default
 from sqlalchemy.sql import compiler
 from sqlalchemy.sql import expression, operators
+from sqlalchemy.sql.expression import BindParameter
 from dateutil import parser
 from sqlalchemy import inspect
 from sqlalchemy_solr.solrdbapi import api_globals
@@ -72,8 +73,11 @@ class SolrCompiler(compiler.SQLCompiler):
                         return "TRUE"
 
         try:
-            datetime = parser.parse(binary.right.text)
-        except ValueError:
+            if (isinstance(binary.right, BindParameter)):
+                datetime = parser.parse(binary.right.effective_value)
+            else:
+                datetime = parser.parse(binary.right.text)
+        except (ValueError, TypeError):
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)
         else:
             if binary.operator in (operators.ge, operators.gt):
@@ -108,9 +112,12 @@ class SolrCompiler(compiler.SQLCompiler):
                 if isinstance(c, expression.BinaryExpression):
                     kw[str(c.left)] = {} if str(c.left) not in kw else kw[str(c.left)]
                     try:
-                        parser.parse(c.right.text)
+                        if (isinstance(c.right, BindParameter)):
+                            parser.parse(c.right.effective_value)
+                        else:
+                            parser.parse(c.right.text)
                         kw[str(c.left)][c.operator] = c
-                    except ValueError:
+                    except (ValueError, TypeError):
                         continue
 
         return super().visit_clauselist(clauselist, **kw)
