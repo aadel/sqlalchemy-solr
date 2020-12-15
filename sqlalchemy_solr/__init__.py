@@ -24,9 +24,3 @@ from sqlalchemy.dialects import registry
 
 registry.register("solr", "sqlalchemy_solr.http", "SolrDialect_http")
 registry.register("solr.http", "sqlalchemy_solr.http", "SolrDialect_http")
-
-# registry.register("solr.jdbc", "sqlalchemy_solr.jdbc", "SolrDialect_jdbc")
-
-
-
-

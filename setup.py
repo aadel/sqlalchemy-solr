@@ -41,9 +41,6 @@ setup(name='sqlalchemy_solr',
           "pandas",
           "sqlalchemy"
       ],
-      extras_require={
-          "jdbc": ["JPype1==0.6.3", "JayDeBeApi"]
-      },
       keywords='SQLAlchemy Apache Solr',
       author='Ahmed Adel',
       author_email='hello@aadel.io',

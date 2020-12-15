@@ -1,3 +1,2 @@
 sqlalchemy
-JayDeBeApi
 python-dateutil
