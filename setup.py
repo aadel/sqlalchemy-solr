@@ -26,6 +26,7 @@ setup(name='sqlalchemy_solr',
       version=VERSION,
       description="Apache Solr Dialect for Apache Superset::SQLAlchemy",
       long_description=open(readme).read(),
+      long_description_content_type="text/markdown",
       classifiers=[
           'Development Status :: 3 - Alpha',
           'Environment :: Console',
