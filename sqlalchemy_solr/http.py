@@ -45,7 +45,7 @@ except ImportError:
 class SolrDialect_http(SolrDialect):
 
     name = 'solrdbapi'
-    driver = 'rest'
+    driver = 'http'
     dbapi = ""
     preparer = SolrIdentifierPreparer
     statement_compiler = SolrCompiler
