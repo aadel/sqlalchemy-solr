@@ -46,7 +46,6 @@ class SolrDialect_http(SolrDialect):
 
     name = 'solrdbapi'
     driver = 'http'
-    dbapi = ""
     preparer = SolrIdentifierPreparer
     statement_compiler = SolrCompiler
     poolclass = pool.SingletonThreadPool

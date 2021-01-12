@@ -171,7 +171,6 @@ class SolrIdentifierPreparer(compiler.IdentifierPreparer):
 class SolrDialect(default.DefaultDialect):
     name = 'solrdbapi'
     driver = 'rest'
-    dbapi = ""
     preparer = SolrIdentifierPreparer
     statement_compiler = SolrCompiler
     poolclass = pool.SingletonThreadPool
@@ -232,13 +231,13 @@ class SolrDialect(default.DefaultDialect):
         # requests gives back Unicode strings
         return True
 
-    def object_as_dict(obj):
-        return {c.key: getattr(obj, c.key)
-                for c in inspect(obj).mapper.column_attrs}
+    def object_as_dict(self):
+        return {c.key: getattr(self, c.key)
+                for c in inspect(self).mapper.column_attrs}
 
     def get_data_type(self, data_type):
         try:
             dt = _type_map[data_type]
-        except:
+        except Exception:
             dt = types.UserDefinedType
         return dt
