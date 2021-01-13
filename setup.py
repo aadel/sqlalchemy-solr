@@ -50,7 +50,7 @@ setup(name='sqlalchemy_solr',
       license='MIT',
       packages=find_packages(),
       include_package_data=True,
-      tests_require=['nose >= 0.11'],
+      tests_require=['pytest >= 6.2.1'],
       test_suite="nose.collector",
       zip_safe=False,
       entry_points={
