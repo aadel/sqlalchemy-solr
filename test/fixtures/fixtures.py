@@ -5,7 +5,7 @@ import pysolr
 class SalesFixture:
 
     TIMEOUT = 10
-    COLLECTION_NAME = 'sales'
+    COLLECTION_NAME = 'sales_test_'
     FILE_NAME = 'sales.csv'
     solr = None
     
