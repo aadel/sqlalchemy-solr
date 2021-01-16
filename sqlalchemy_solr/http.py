@@ -30,6 +30,8 @@ from .base import SolrDialect, SolrIdentifierPreparer, SolrCompiler
 from sqlalchemy_solr.solrdbapi import api_globals
 import logging
 
+from message_formatter import MessageFormatter
+
 try:
     from sqlalchemy.sql.compiler import SQLCompiler
 except ImportError:
@@ -58,6 +60,8 @@ class SolrDialect_http(SolrDialect):
     returns_unicode_strings = True
     description_encoding = None
     supports_native_boolean = True
+
+    mf = MessageFormatter()
 
     def __init__(self, **kw):
         default.DefaultDialect.__init__(self, **kw)
@@ -110,9 +114,8 @@ class SolrDialect_http(SolrDialect):
             qargs['password'] = url.password
 
         except Exception as ex:
-            print("************************************")
-            print("Error in SolrDialect_http.create_connect_args :: ", str(ex))
-            print("************************************")
+            logging.error(self.mf
+                .format("Error in SolrDialect_http.create_connect_args :: ", str(ex)))
         return [], qargs
 
     def get_table_names(self, connection, schema=None, **kw):
