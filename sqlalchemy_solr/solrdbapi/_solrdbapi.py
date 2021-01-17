@@ -194,7 +194,7 @@ class Cursor(object):
         try:
             index = next(self._resultSetStatus)
             try:
-                for element in range(fetch_size - 1):
+                for _ in range(fetch_size - 1):
                     next(self._resultSetStatus)
             except StopIteration:
                 pass
