@@ -67,11 +67,6 @@ class SolrDialect_http(SolrDialect):
         default.DefaultDialect.__init__(self, **kw)
         self.supported_extensions = []
 
-    @classmethod
-    def dbapi(cls):
-        import sqlalchemy_solr.solrdbapi as module
-        return module
-
     def create_connect_args(self, url, **kwargs):
         
         url_port = url.port or 8047
