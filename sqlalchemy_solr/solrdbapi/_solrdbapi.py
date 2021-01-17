@@ -11,7 +11,7 @@ from . import api_globals
 from .api_exceptions import Error, Warning, AuthError, DatabaseError, \
     ProgrammingError, CursorClosedException, ConnectionClosedException
 
-from ..message_formatter import MessageFormatter
+from sqlalchemy_solr.message_formatter import MessageFormatter
 
 apilevel = '2.0'
 threadsafety = 3
