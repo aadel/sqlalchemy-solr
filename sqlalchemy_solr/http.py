@@ -30,7 +30,7 @@ from .base import SolrDialect, SolrIdentifierPreparer, SolrCompiler
 from sqlalchemy_solr.solrdbapi import api_globals
 import logging
 
-from message_formatter import MessageFormatter
+from .message_formatter import MessageFormatter
 
 try:
     from sqlalchemy.sql.compiler import SQLCompiler

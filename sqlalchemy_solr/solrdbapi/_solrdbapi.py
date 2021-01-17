@@ -46,7 +46,7 @@ class Cursor(object):
 
 
     # Decorator for methods which require connection
-    def connected(func):
+    def connected(func): # pylint: disable=no-self-argument
         def func_wrapper(self, *args, **kwargs):
             if self._connected is False:
                 logging.error(self.mf.format("Error in Cursor.func_wrapper"))
@@ -55,7 +55,7 @@ class Cursor(object):
                 logging.error(self.mf.format("Error in Cursor.func_wrapper"))
                 raise ConnectionClosedException("Connection object is closed")
             else:
-                return func(self, *args, **kwargs)
+                return func(self, *args, **kwargs) # pylint: disable=not-callable
 
         return func_wrapper
 
@@ -69,7 +69,7 @@ class Cursor(object):
                 else:
                     query = query.replace("?", str(param), 1)
         except Exception as ex:
-            logging.error(self.mf.format("Error in Cursor.substitute_in_query", str(ex)))
+            logging.error(Cursor.mf.format("Error in Cursor.substitute_in_query", str(ex)))
         return query
 
     @staticmethod
@@ -104,7 +104,7 @@ class Cursor(object):
                         except ValueError:
                             types.append("varchar")
         except Exception as ex:
-            logging.error(self.mf.format("Error in Cursor.parse_column_types", str(ex)))
+            logging.error(Cursor.mf.format("Error in Cursor.parse_column_types", str(ex)))
         return names, types
 
     @connected
@@ -129,7 +129,7 @@ class Cursor(object):
             self._session
         )
 
-        logging.info(self.mf.format(("Query:", operation))
+        logging.info(self.mf.format("Query:", operation))
 
         if result.status_code != 200:
             logging.error(self.mf.format("Error in Cursor.execute"))
@@ -169,7 +169,7 @@ class Cursor(object):
                 )
                 return self
             except Exception as ex:
-                logging.error(self.mf.format("Error in Cursor.execute", str(ex))
+                logging.error(self.mf.format("Error in Cursor.execute", str(ex)))
 
     @connected
     def fetchone(self):
@@ -228,6 +228,9 @@ class Cursor(object):
 
 
 class Connection(object):
+    
+    mf = MessageFormatter()
+    
     def __init__(self, host, db, username, password, server_path, 
             collection, port, proto, session):
 
@@ -243,14 +246,14 @@ class Connection(object):
         self._connected = True
 
     # Decorator for methods which require connection
-    def connected(func):
+    def connected(func): # pylint: disable=no-self-argument
 
         def func_wrapper(self, *args, **kwargs):
             if self._connected is False:
                 logging.error(self.mf.format("ConnectionClosedException in func_wrapper"))
                 raise ConnectionClosedException("Connection object is closed")
             else:
-                return func(self, *args, **kwargs)
+                return func(self, *args, **kwargs) # pylint: disable=not-callable
         return func_wrapper
 
     def is_connected(self):
@@ -298,6 +301,7 @@ def connect(host, port=8047, db=None, username=None, password=None,
         verify_ssl=False, ca_certs=None):
 
     session = Session()
+    mf = MessageFormatter()
 
     if verify_ssl is False:
         session.verify = False
@@ -322,8 +326,8 @@ def connect(host, port=8047, db=None, username=None, password=None,
         )
 
         if response.status_code != 200:
-            logging.error(self.mf.format("Error in connect"))
-            logging.error(self.mf.format( "Response code:", response.status_code))
+            logging.error(mf.format("Error in connect"))
+            logging.error(mf.format("Response code:", response.status_code))
             raise DatabaseError(str(response.json()["errorMessage"]), response.status_code)
 
     return Connection(host, db, username, password, server_path, 
