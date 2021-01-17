@@ -43,6 +43,7 @@ class Cursor(object):
         self._resultSetMetadata = None
         self._resultSetStatus = None
         self.rowcount = -1
+        self.default_storage_plugin = None
 
 
     # Decorator for methods which require connection
