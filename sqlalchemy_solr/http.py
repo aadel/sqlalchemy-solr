@@ -46,21 +46,6 @@ except ImportError:
 
 class SolrDialect_http(SolrDialect):
 
-    name = 'solrdbapi'
-    driver = 'http'
-    preparer = SolrIdentifierPreparer
-    statement_compiler = SolrCompiler
-    poolclass = pool.SingletonThreadPool
-    supports_alter = False
-    supports_pk_autoincrement = False
-    supports_default_values = False
-    supports_empty_insert = False
-    supports_unicode_statements = True
-    supports_unicode_binds = True
-    returns_unicode_strings = True
-    description_encoding = None
-    supports_native_boolean = True
-
     mf = MessageFormatter()
 
     def __init__(self, **kw):
