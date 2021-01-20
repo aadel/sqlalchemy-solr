@@ -43,6 +43,7 @@ class Cursor(object):
         self._resultSetMetadata = None
         self._resultSetStatus = None
         self.rowcount = -1
+        self.lastrowid = None
         self.default_storage_plugin = None
 
 
