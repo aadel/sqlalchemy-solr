@@ -87,7 +87,10 @@ class SolrCompiler(compiler.SQLCompiler):
                     if kw[str(binary.left)].keys() & [operators.le, operators.lt]:
                         ubound, uoperator = (']', operators.le) \
                             if operators.le in kw[str(binary.left)] else ('}', operators.lt)
-                        udatetime = parser.parse(kw[str(binary.left)][uoperator].right.text)
+                        if (isinstance(kw[str(binary.left)][uoperator].right.text, BindParameter)):
+                            udatetime = parser.parse(kw[str(binary.left)][uoperator].right.effective_value)
+                        else:
+                            udatetime = parser.parse(kw[str(binary.left)][uoperator].right.text)
                     else:
                         ubound, udatetime = "]", "*"
             else:
@@ -97,7 +100,10 @@ class SolrCompiler(compiler.SQLCompiler):
                     if kw[str(binary.left)].keys() & [operators.ge, operators.gt]:
                         lbound, loperator = ('[', operators.ge) \
                             if operators.ge in kw[str(binary.left)] else ('{', operators.gt)
-                        ldatetime = parser.parse(kw[str(binary.left)][loperator].right.text)
+                        if (isinstance(kw[str(binary.left)][loperator].right, BindParameter)):
+                            ldatetime = parser.parse(kw[str(binary.left)][loperator].right.effective_value)
+                        else:
+                            ldatetime = parser.parse(kw[str(binary.left)][loperator].right.text)
                     else:
                         lbound, ldatetime = "[", "*"
 
