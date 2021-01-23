@@ -5,22 +5,19 @@ from sqlalchemy import Table, MetaData
 from sqlalchemy_solr.http import SolrDialect_http
 
 from .fixtures.fixtures import SalesFixture
-from .test_db_creation import DBCreationTest
 
 class TestSuite:
     SOLR_BASE_URL = 'http://solr:8983/solr'
     SOLR_CONNECTION_URI = 'solr://solr:8983/solr'
     COLLECTION_NAME = 'sales_test_'
 
-    def test_indexing_data(self):
+    def index_data(self):
         f = SalesFixture(TestSuite.SOLR_BASE_URL)
         f.truncate_collection()
         f.index()
 
-    def test_db_creation(self):
-        DBCreationTest()
-
-    def test_solr_date_compilation(self):
+    def test_solr_date_range_compilation(self):
+        self.index_data()
         metadata = MetaData()
         engine = create_engine(TestSuite.SOLR_CONNECTION_URI + '/'
             + TestSuite.COLLECTION_NAME, echo=True)

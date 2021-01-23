@@ -3,7 +3,7 @@ import json
 from requests import Session
 
 
-class DBCreationTest:
+class TestDBCreation:
     SOLR_WORKER_COLLECTION_NAME = "sales_test_"
     SUPERSET_URI = 'http://superset:8088'
     SUPERSET_USER = os.environ['SUPERSET_USER']
@@ -36,5 +36,6 @@ class DBCreationTest:
         assert db_creation_response.status_code == 201
 
     def delete_database(self, headers, id):
-        self.session.delete(self.SUPERSET_URI + '/api/v1/database/' + str(id), 
+        response = self.session.delete(self.SUPERSET_URI + '/api/v1/database/' + str(id), 
             headers=headers)
+        assert response.status_code == 200
