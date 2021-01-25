@@ -2,23 +2,21 @@ from sqlalchemy import create_engine
 from sqlalchemy import select, and_
 from sqlalchemy import Table, MetaData
 from sqlalchemy_solr.http import SolrDialect_http
-
-from .settings import (SOLR_BASE_URL, SOLR_CONNECTION_URI, SOLR_WORKER_COLLECTION_NAME)
 from .fixtures.fixtures import SalesFixture
 
-class TestSuite:
+class TestDateRangeCompilation:
 
-    def index_data(self):
-        f = SalesFixture(SOLR_BASE_URL)
+    def index_data(self, settings):
+        f = SalesFixture(settings['SOLR_BASE_URL'])
         f.truncate_collection()
         f.index()
 
-    def test_solr_date_range_compilation(self):
-        self.index_data()
+    def test_solr_date_range_compilation(self, settings):
+        self.index_data(settings)
         metadata = MetaData()
-        engine = create_engine(SOLR_CONNECTION_URI + '/'
-            + SOLR_WORKER_COLLECTION_NAME, echo=True)
-        t = Table(SOLR_WORKER_COLLECTION_NAME, metadata, autoload=True, autoload_with=engine)
+        engine = create_engine(settings['SOLR_CONNECTION_URI'] + '/'
+            + settings['SOLR_WORKER_COLLECTION_NAME'], echo=True)
+        t = Table(settings['SOLR_WORKER_COLLECTION_NAME'], metadata, autoload=True, autoload_with=engine)
 
         lower_bound = '2017-05-10 00:00:00'
         upper_bound = '2017-05-20 00:00:00'

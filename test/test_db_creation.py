@@ -1,14 +1,13 @@
 import os
 import json
 from requests import Session
-from .settings import (SUPERSET_USER, SUPERSET_PASS, 
-    SUPERSET_URI, SUPERSET_DATABASE_NAME, SOLR_WORKER_COLLECTION_NAME)
-from .steps import login, create_database
+from .steps import TestSteps
 
 class TestDBCreation:
 
-    def test_db_creation(self):
+    def test_db_creation(self, settings):
+        test_steps = TestSteps(settings)
         session = Session()
-        headers = login(session)
-        db_creation_response = create_database(session, headers)
+        headers = test_steps.login(session)
+        db_creation_response = test_steps.create_database(session, headers)
         assert db_creation_response.status_code == 201
