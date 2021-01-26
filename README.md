@@ -1,10 +1,10 @@
-# Apache Solr dialect for SQLAlchemy Superset
+# Apache Solr dialect for SQLAlchemy and Apache Superset
 
-A dialect for Apache Solr that can be used with [Apache Superset](https://superset.incubator.apache.org).
+A dialect for ßApache Solr that can be used with [Apache Superset](https://superset.apache.org).
 
 ## Installation
 
-The driver can either be installed through PyPi or from the source code.
+The package can either be installed through PyPi or from the source code.
 
 #### Through Python Package Index
 
@@ -26,7 +26,7 @@ solr://<username>:<password>@<host>:<port>/solr/<collection>[?use_ssl=true|false
 
 #### Requirements
 
-* A Solr instance with Parallel SQL support up and running
+* A Solr instance with a Parallel SQL supported up and running
 * A Superset instance up and running with this package installed
 * `pytest` >= 6.2.1 installed on the testing machine
 
