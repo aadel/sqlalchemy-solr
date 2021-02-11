@@ -1,6 +1,6 @@
 # Apache Solr dialect for SQLAlchemy and Apache Superset
 
-A dialect for ßApache Solr that can be used with [Apache Superset](https://superset.apache.org).
+A dialect for Apache Solr that can be used with [Apache Superset](https://superset.apache.org).
 
 ## Installation
 
