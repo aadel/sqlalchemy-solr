@@ -138,6 +138,8 @@ class Cursor(object):
             raise ProgrammingError(result.json().get("errorMessage", "ERROR"), result.status_code)
         else:
             rows = result.json()["result-set"]['docs']
+            if "EXCEPTION" in rows[0]:
+                raise Exception(rows[0]["EXCEPTION"])
             columns = []
             if "EOF" in rows[-1]:
                 del rows[-1]
