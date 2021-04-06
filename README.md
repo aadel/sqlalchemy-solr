@@ -22,6 +22,19 @@ To connect to Solr with SQLAlchemy, the following URL pattern can be used:
 solr://<username>:<password>@<host>:<port>/solr/<collection>[?use_ssl=true|false]
 ```
 
+## Basic Example
+
+The following example illustrates the basic usage in a Python project:
+
+```
+engine = create_engine('solr://solr:8983/solr/examples_books')
+
+with engine.connect() as connection:
+    result = connection.execute(text("SELECT sequence_i, genre_s FROM examples_books"))
+    for row in result:
+        print("Sequence: {}, Genre: {}".format(row['sequence_i'], row['genre_s']))      
+```
+
 ## Testing
 
 #### Requirements
