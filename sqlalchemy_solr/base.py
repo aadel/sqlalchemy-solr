@@ -28,7 +28,6 @@ from sqlalchemy.sql import expression, operators
 from sqlalchemy.sql.expression import BindParameter
 from dateutil import parser
 from sqlalchemy import inspect
-from sqlalchemy_solr.solrdbapi import api_globals
 import logging
 
 try:
@@ -42,13 +41,14 @@ _type_map = {
     'binary': types.LargeBinary,
     'boolean': types.Boolean,
     'pdate': types.DateTime,
-    'pdouble': types.Float,
     'pint': types.Integer,
     'plong': types.BigInteger,
+    'pfloat': types.Float,
+    'pdouble': types.REAL,
     'string': types.String,
-    'text_general': types.Text,
-    'pfloat': types.Float
+    'text_general': types.Text
 }
+
 
 class SolrCompiler(compiler.SQLCompiler):
 
@@ -128,6 +128,7 @@ class SolrCompiler(compiler.SQLCompiler):
 
         return super().visit_clauselist(clauselist, **kw)
 
+
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     reserved_words = compiler.RESERVED_WORDS.copy()
     reserved_words.update(
@@ -171,7 +172,6 @@ class SolrIdentifierPreparer(compiler.IdentifierPreparer):
 
     def __init__(self, dialect):
         super(SolrIdentifierPreparer, self).__init__(dialect, initial_quote='`', final_quote='`')
-
 
 
 class SolrDialect(default.DefaultDialect):

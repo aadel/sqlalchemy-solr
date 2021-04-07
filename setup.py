@@ -41,7 +41,11 @@ setup(name='sqlalchemy_solr',
           "requests",
           "numpy",
           "pandas",
-          "sqlalchemy"
+          "sqlalchemy",
+          "sqlparse"
+      ],
+      tests_require = [
+          "pysolr"
       ],
       keywords='Apache Solr Superset SQLAlchemy dialect',
       author='Ahmed Adel',

@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 from json import dumps
 from numpy import nan
-from pandas import DataFrame
+from pandas import DataFrame, to_datetime
 from requests import Session
-from pandas import to_datetime
 import re
 import logging
+from .solr_reflect import SolrTableReflection
 
 from . import api_globals
 from .api_exceptions import Error, Warning, AuthError, DatabaseError, \
@@ -85,30 +85,6 @@ class Cursor(object):
             auth=(username, password)
         )
 
-    @staticmethod
-    def parse_column_types(df):
-        names = []
-        types = []
-        try:
-            for column in df:
-                names.append(column)
-                try:
-                    df[column] = df[column].astype(int)
-                    types.append("bigint")
-                except ValueError:
-                    try:
-                        df[column] = df[column].astype(float)
-                        types.append("decimal")
-                    except ValueError:
-                        try:
-                            df[column] = to_datetime(df[column])
-                            types.append("timestamp")
-                        except ValueError:
-                            types.append("varchar")
-        except Exception as ex:
-            logging.error(Cursor.mf.format("Error in Cursor.parse_column_types", str(ex)))
-        return names, types
-
     @connected
     def getdesc(self):
         return self.description
@@ -150,7 +126,8 @@ class Cursor(object):
                 DataFrame(data=rows, columns=columns).fillna(value=nan)
             )
 
-            column_names, column_types = self.parse_column_types(self._resultSet)
+            column_names, column_types = \
+                SolrTableReflection.reflect_column_types(self._resultSet, operation)
 
             # Get column metadata
             column_metadata = list(map(
@@ -248,6 +225,8 @@ class Connection(object):
         self.port = port
         self._session = session
         self._connected = True
+
+        SolrTableReflection.connection = self
 
     # Decorator for methods which require connection
     def connected(func): # pylint: disable=no-self-argument
