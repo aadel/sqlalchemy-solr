@@ -44,8 +44,9 @@ setup(name='sqlalchemy_solr',
           "sqlalchemy",
           "sqlparse"
       ],
-      tests_require = [
-          "pysolr"
+      tests_requires=[
+          "pysolr",
+          "pytest >= 6.2.1"
       ],
       keywords='Apache Solr Superset SQLAlchemy dialect',
       author='Ahmed Adel',
@@ -54,7 +55,6 @@ setup(name='sqlalchemy_solr',
       license='MIT',
       packages=find_packages(),
       include_package_data=True,
-      tests_require=['pytest >= 6.2.1'],
       test_suite="nose.collector",
       zip_safe=False,
       entry_points={
