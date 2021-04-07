@@ -24,7 +24,7 @@ readme = os.path.join(os.path.dirname(__file__), 'README.md')
 
 setup(name='sqlalchemy_solr',
       version=VERSION,
-      description="Apache Solr Dialect for Apache Superset::SQLAlchemy",
+      description="Apache Solr Dialect for SQLAlchemy and Apache Superset",
       long_description=open(readme).read(),
       long_description_content_type="text/markdown",
       classifiers=[
@@ -44,7 +44,7 @@ setup(name='sqlalchemy_solr',
           "sqlalchemy",
           "sqlparse"
       ],
-      tests_requires=[
+      tests_require=[
           "pysolr",
           "pytest >= 6.2.1"
       ],
