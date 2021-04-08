@@ -30,6 +30,9 @@ from dateutil import parser
 from sqlalchemy import inspect
 import logging
 
+from sqlalchemy_solr.solr_type_compiler import SolrTypeCompiler
+from sqlalchemy_solr.solrdbapi.array import ARRAY
+
 try:
     from sqlalchemy.sql.compiler import SQLCompiler
 except ImportError:
@@ -46,7 +49,13 @@ _type_map = {
     'pfloat': types.Float,
     'pdouble': types.REAL,
     'string': types.String,
-    'text_general': types.Text
+    'text_general': types.Text,
+    'booleans': ARRAY(types.BOOLEAN),
+    'pints': ARRAY(types.Integer),
+    'plongs': ARRAY(types.BigInteger),
+    'pfloats': ARRAY(types.Float),
+    'pdoubles': ARRAY(types.REAL),
+    'strings': ARRAY(types.String)
 }
 
 
@@ -128,6 +137,9 @@ class SolrCompiler(compiler.SQLCompiler):
 
         return super().visit_clauselist(clauselist, **kw)
 
+    def visit_array(self, element, **kw):
+        return "ARRAY[%s]" % self.visit_clauselist(element, **kw)
+
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     reserved_words = compiler.RESERVED_WORDS.copy()
@@ -179,6 +191,7 @@ class SolrDialect(default.DefaultDialect):
     driver = 'rest'
     preparer = SolrIdentifierPreparer
     statement_compiler = SolrCompiler
+    type_compiler = SolrTypeCompiler
     poolclass = pool.SingletonThreadPool
     supports_alter = False
     supports_pk_autoincrement = False

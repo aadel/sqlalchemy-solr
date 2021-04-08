@@ -95,8 +95,7 @@ class SolrTableReflection:
                     yield identifier.get_name()
             elif isinstance(item, Identifier):
                 yield item.get_name()
-            # It's a bug to check for Keyword here, but in the example
-            # above some tables names are identified as keywords...
+            # It's a bug to check for Keyword here, check sqlparse documentation
             elif item.ttype is Keyword:
                 yield item.value
 

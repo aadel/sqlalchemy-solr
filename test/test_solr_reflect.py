@@ -82,3 +82,4 @@ class TestSolrTableReflection:
         # assert settings['SOLR_WORKER_COLLECTION_NAME'] in tables
         reflected_data_types = SolrTableReflection.reflect_column_types(_resultSet, sql)
         assert (["CITY_s"], [types.VARCHAR]) == reflected_data_types
+        assert (["PHONE_ss"], [types.ARRAY]) == reflected_data_types
