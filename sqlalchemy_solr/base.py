@@ -11,58 +11,58 @@
 #
 # The above copyright notice and this permission notice shall be included in all copies or
 # substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 # INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
 # PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
 # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from sqlalchemy import exc, pool, types
-from sqlalchemy.engine import default
-from sqlalchemy.sql import compiler
-from sqlalchemy.sql import expression, operators
-from sqlalchemy.sql.expression import BindParameter
-from dateutil import parser
-from sqlalchemy import inspect
 import logging
 
+from dateutil import parser
+from sqlalchemy import exc
+from sqlalchemy import inspect
+from sqlalchemy import pool
+from sqlalchemy import types
+from sqlalchemy.engine import default
+from sqlalchemy.sql import compiler
+from sqlalchemy.sql import expression
+from sqlalchemy.sql import operators
+from sqlalchemy.sql.expression import BindParameter
 from sqlalchemy_solr.solr_type_compiler import SolrTypeCompiler
 from sqlalchemy_solr.solrdbapi.array import ARRAY
 
-try:
-    from sqlalchemy.sql.compiler import SQLCompiler
-except ImportError:
-    from sqlalchemy.sql.compiler import DefaultCompiler as SQLCompiler
-
-logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
+logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
 
 _type_map = {
-    'binary': types.LargeBinary,
-    'boolean': types.Boolean,
-    'pdate': types.DateTime,
-    'pint': types.Integer,
-    'plong': types.BigInteger,
-    'pfloat': types.Float,
-    'pdouble': types.REAL,
-    'string': types.String,
-    'text_general': types.Text,
-    'booleans': ARRAY(types.BOOLEAN),
-    'pints': ARRAY(types.Integer),
-    'plongs': ARRAY(types.BigInteger),
-    'pfloats': ARRAY(types.Float),
-    'pdoubles': ARRAY(types.REAL),
-    'strings': ARRAY(types.String)
+    "binary": types.LargeBinary,
+    "boolean": types.Boolean,
+    "pdate": types.DateTime,
+    "pint": types.Integer,
+    "plong": types.BigInteger,
+    "pfloat": types.Float,
+    "pdouble": types.REAL,
+    "string": types.String,
+    "text_general": types.Text,
+    "booleans": ARRAY(types.BOOLEAN),
+    "pints": ARRAY(types.Integer),
+    "plongs": ARRAY(types.BigInteger),
+    "pfloats": ARRAY(types.Float),
+    "pdoubles": ARRAY(types.REAL),
+    "strings": ARRAY(types.String),
 }
 
 
 class SolrCompiler(compiler.SQLCompiler):
 
     merge_ops = (operators.ge, operators.gt, operators.le, operators.lt)
-    bounds = {operators.ge: '[', operators.gt: '{', operators.le: ']', operators.lt: '}'}
+    bounds = {
+        operators.ge: "[",
+        operators.gt: "{",
+        operators.le: "]",
+        operators.lt: "}",
+    }
 
     def default_from(self):
         """Called when a ``SELECT`` statement has no froms,
@@ -82,7 +82,7 @@ class SolrCompiler(compiler.SQLCompiler):
                         return "TRUE"
 
         try:
-            if (isinstance(binary.right, BindParameter)):
+            if isinstance(binary.right, BindParameter):
                 datetime = parser.parse(binary.right.effective_value)
             else:
                 datetime = parser.parse(binary.right.text)
@@ -94,12 +94,21 @@ class SolrCompiler(compiler.SQLCompiler):
                 lbound = self.bounds[binary.operator]
                 if str(binary.left) in kw:
                     if kw[str(binary.left)].keys() & [operators.le, operators.lt]:
-                        ubound, uoperator = (']', operators.le) \
-                            if operators.le in kw[str(binary.left)] else ('}', operators.lt)
-                        if (isinstance(kw[str(binary.left)][uoperator].right.text, BindParameter)):
-                            udatetime = parser.parse(kw[str(binary.left)][uoperator].right.effective_value)
+                        ubound, uoperator = (
+                            ("]", operators.le)
+                            if operators.le in kw[str(binary.left)]
+                            else ("}", operators.lt)
+                        )
+                        if isinstance(
+                            kw[str(binary.left)][uoperator].right.text, BindParameter
+                        ):
+                            udatetime = parser.parse(
+                                kw[str(binary.left)][uoperator].right.effective_value
+                            )
                         else:
-                            udatetime = parser.parse(kw[str(binary.left)][uoperator].right.text)
+                            udatetime = parser.parse(
+                                kw[str(binary.left)][uoperator].right.text
+                            )
                     else:
                         ubound, udatetime = "]", "*"
             else:
@@ -107,17 +116,34 @@ class SolrCompiler(compiler.SQLCompiler):
                 ubound = self.bounds[binary.operator]
                 if str(binary.left) in kw:
                     if kw[str(binary.left)].keys() & [operators.ge, operators.gt]:
-                        lbound, loperator = ('[', operators.ge) \
-                            if operators.ge in kw[str(binary.left)] else ('{', operators.gt)
-                        if (isinstance(kw[str(binary.left)][loperator].right, BindParameter)):
-                            ldatetime = parser.parse(kw[str(binary.left)][loperator].right.effective_value)
+                        lbound, loperator = (
+                            ("[", operators.ge)
+                            if operators.ge in kw[str(binary.left)]
+                            else ("{", operators.gt)
+                        )
+                        if isinstance(
+                            kw[str(binary.left)][loperator].right, BindParameter
+                        ):
+                            ldatetime = parser.parse(
+                                kw[str(binary.left)][loperator].right.effective_value
+                            )
                         else:
-                            ldatetime = parser.parse(kw[str(binary.left)][loperator].right.text)
+                            ldatetime = parser.parse(
+                                kw[str(binary.left)][loperator].right.text
+                            )
                     else:
                         lbound, ldatetime = "[", "*"
 
-            binary.right = expression.TextClause("'" + lbound + ldatetime.isoformat()
-                + "Z TO " + udatetime.isoformat() + "Z" + ubound + "'")
+            binary.right = expression.TextClause(
+                "'"
+                + lbound
+                + ldatetime.isoformat()
+                + "Z TO "
+                + udatetime.isoformat()
+                + "Z"
+                + ubound
+                + "'"
+            )
             binary.operator = operators.eq
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
@@ -127,7 +153,7 @@ class SolrCompiler(compiler.SQLCompiler):
                 if isinstance(c, expression.BinaryExpression):
                     kw[str(c.left)] = {} if str(c.left) not in kw else kw[str(c.left)]
                     try:
-                        if (isinstance(c.right, BindParameter)):
+                        if isinstance(c.right, BindParameter):
                             parser.parse(c.right.effective_value)
                         else:
                             parser.parse(c.right.text)
@@ -145,50 +171,326 @@ class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     reserved_words = compiler.RESERVED_WORDS.copy()
     reserved_words.update(
         [
-            'abs', 'all', 'allocate', 'allow', 'alter', 'and', 'any', 'are', 'array', 'as', 'asensitive',
-            'asymmetric', 'at', 'atomic', 'authorization', 'avg', 'begin', 'between', 'bigint', 'binary',
-            'bit', 'blob', 'boolean', 'both', 'by', 'call', 'called', 'cardinality', 'cascaded', 'case',
-            'cast', 'ceil', 'ceiling', 'char', 'character', 'character_length', 'char_length', 'check',
-            'clob', 'close', 'coalesce', 'collate', 'collect', 'column', 'commit', 'condition', 'connect',
-            'constraint', 'convert', 'corr', 'corresponding', 'count', 'covar_pop', 'covar_samp', 'create',
-            'cross', 'cube', 'cume_dist', 'current', 'current_catalog', 'current_date',
-            'current_default_transform_group', 'current_path', 'current_role', 'current_schema', 'current_time',
-            'current_timestamp', 'current_transform_group_for_type', 'current_user', 'cursor', 'cycle',
-            'databases', 'date', 'day', 'deallocate', 'dec', 'decimal', 'declare', 'default', 'default_kw',
-            'delete', 'dense_rank', 'deref', 'describe', 'deterministic', 'disallow', 'disconnect', 'distinct',
-            'double', 'drop', 'dynamic', 'each', 'element', 'else', 'end', 'end_exec', 'escape', 'every', 'except',
-            'exec', 'execute', 'exists', 'exp', 'explain', 'external', 'extract', 'false', 'fetch', 'files', 'filter',
-            'first_value', 'float', 'floor', 'for', 'foreign', 'free', 'from', 'full', 'function', 'fusion', 'get',
-            'global', 'grant', 'group', 'grouping', 'having', 'hold', 'hour', 'identity', 'if', 'import', 'in',
-            'indicator', 'inner', 'inout', 'insensitive', 'insert', 'int', 'integer', 'intersect', 'intersection',
-            'interval', 'into', 'is', 'jar', 'join', 'language', 'large', 'last_value', 'lateral', 'leading', 'left',
-            'like', 'limit', 'ln', 'local', 'localtime', 'localtimestamp', 'lower', 'match', 'max', 'member', 'merge',
-            'method', 'min', 'minute', 'mod', 'modifies', 'module', 'month', 'multiset', 'national', 'natural',
-            'nchar', 'nclob', 'new', 'no', 'none', 'normalize', 'not', 'null', 'nullif', 'numeric', 'octet_length',
-            'of', 'offset', 'old', 'on', 'only', 'open', 'or', 'order', 'out', 'outer', 'over', 'overlaps', 'overlay',
-            'parameter', 'partition', 'percentile_cont', 'percentile_disc', 'percent_rank', 'position', 'power',
-            'precision', 'prepare', 'primary', 'procedure', 'range', 'rank', 'reads', 'real', 'recursive', 'ref',
-            'references', 'referencing', 'regr_avgx', 'regr_avgy', 'regr_count', 'regr_intercept', 'regr_r2',
-            'regr_slope', 'regr_sxx', 'regr_sxy', 'release', 'replace', 'result', 'return', 'returns', 'revoke',
-            'right', 'rollback', 'rollup', 'row', 'rows', 'row_number', 'savepoint', 'schemas', 'scope', 'scroll',
-            'search', 'second', 'select', 'sensitive', 'session_user', 'set', 'show', 'similar', 'smallint', 'some',
-            'specific', 'specifictype', 'sql', 'sqlexception', 'sqlstate', 'sqlwarning', 'sqrt', 'start', 'static',
-            'stddev_pop', 'stddev_samp', 'submultiset', 'substring', 'sum', 'symmetric', 'system', 'system_user',
-            'table', 'tables', 'tablesample', 'then', 'time', 'timestamp', 'timezone_hour', 'timezone_minute',
-            'tinyint', 'to', 'trailing', 'translate', 'translation', 'treat', 'trigger', 'trim', 'true', 'uescape',
-            'union', 'unique', 'unknown', 'unnest', 'update', 'upper', 'use', 'user', 'using', 'value', 'values',
-            'varbinary', 'varchar', 'varying', 'var_pop', 'var_samp', 'when', 'whenever', 'where', 'width_bucket',
-            'window', 'with', 'within', 'without', 'year'
+            "abs",
+            "all",
+            "allocate",
+            "allow",
+            "alter",
+            "and",
+            "any",
+            "are",
+            "array",
+            "as",
+            "asensitive",
+            "asymmetric",
+            "at",
+            "atomic",
+            "authorization",
+            "avg",
+            "begin",
+            "between",
+            "bigint",
+            "binary",
+            "bit",
+            "blob",
+            "boolean",
+            "both",
+            "by",
+            "call",
+            "called",
+            "cardinality",
+            "cascaded",
+            "case",
+            "cast",
+            "ceil",
+            "ceiling",
+            "char",
+            "character",
+            "character_length",
+            "char_length",
+            "check",
+            "clob",
+            "close",
+            "coalesce",
+            "collate",
+            "collect",
+            "column",
+            "commit",
+            "condition",
+            "connect",
+            "constraint",
+            "convert",
+            "corr",
+            "corresponding",
+            "count",
+            "covar_pop",
+            "covar_samp",
+            "create",
+            "cross",
+            "cube",
+            "cume_dist",
+            "current",
+            "current_catalog",
+            "current_date",
+            "current_default_transform_group",
+            "current_path",
+            "current_role",
+            "current_schema",
+            "current_time",
+            "current_timestamp",
+            "current_transform_group_for_type",
+            "current_user",
+            "cursor",
+            "cycle",
+            "databases",
+            "date",
+            "day",
+            "deallocate",
+            "dec",
+            "decimal",
+            "declare",
+            "default",
+            "default_kw",
+            "delete",
+            "dense_rank",
+            "deref",
+            "describe",
+            "deterministic",
+            "disallow",
+            "disconnect",
+            "distinct",
+            "double",
+            "drop",
+            "dynamic",
+            "each",
+            "element",
+            "else",
+            "end",
+            "end_exec",
+            "escape",
+            "every",
+            "except",
+            "exec",
+            "execute",
+            "exists",
+            "exp",
+            "explain",
+            "external",
+            "extract",
+            "false",
+            "fetch",
+            "files",
+            "filter",
+            "first_value",
+            "float",
+            "floor",
+            "for",
+            "foreign",
+            "free",
+            "from",
+            "full",
+            "function",
+            "fusion",
+            "get",
+            "global",
+            "grant",
+            "group",
+            "grouping",
+            "having",
+            "hold",
+            "hour",
+            "identity",
+            "if",
+            "import",
+            "in",
+            "indicator",
+            "inner",
+            "inout",
+            "insensitive",
+            "insert",
+            "int",
+            "integer",
+            "intersect",
+            "intersection",
+            "interval",
+            "into",
+            "is",
+            "jar",
+            "join",
+            "language",
+            "large",
+            "last_value",
+            "lateral",
+            "leading",
+            "left",
+            "like",
+            "limit",
+            "ln",
+            "local",
+            "localtime",
+            "localtimestamp",
+            "lower",
+            "match",
+            "max",
+            "member",
+            "merge",
+            "method",
+            "min",
+            "minute",
+            "mod",
+            "modifies",
+            "module",
+            "month",
+            "multiset",
+            "national",
+            "natural",
+            "nchar",
+            "nclob",
+            "new",
+            "no",
+            "none",
+            "normalize",
+            "not",
+            "null",
+            "nullif",
+            "numeric",
+            "octet_length",
+            "of",
+            "offset",
+            "old",
+            "on",
+            "only",
+            "open",
+            "or",
+            "order",
+            "out",
+            "outer",
+            "over",
+            "overlaps",
+            "overlay",
+            "parameter",
+            "partition",
+            "percentile_cont",
+            "percentile_disc",
+            "percent_rank",
+            "position",
+            "power",
+            "precision",
+            "prepare",
+            "primary",
+            "procedure",
+            "range",
+            "rank",
+            "reads",
+            "real",
+            "recursive",
+            "ref",
+            "references",
+            "referencing",
+            "regr_avgx",
+            "regr_avgy",
+            "regr_count",
+            "regr_intercept",
+            "regr_r2",
+            "regr_slope",
+            "regr_sxx",
+            "regr_sxy",
+            "release",
+            "replace",
+            "result",
+            "return",
+            "returns",
+            "revoke",
+            "right",
+            "rollback",
+            "rollup",
+            "row",
+            "rows",
+            "row_number",
+            "savepoint",
+            "schemas",
+            "scope",
+            "scroll",
+            "search",
+            "second",
+            "select",
+            "sensitive",
+            "session_user",
+            "set",
+            "show",
+            "similar",
+            "smallint",
+            "some",
+            "specific",
+            "specifictype",
+            "sql",
+            "sqlexception",
+            "sqlstate",
+            "sqlwarning",
+            "sqrt",
+            "start",
+            "static",
+            "stddev_pop",
+            "stddev_samp",
+            "submultiset",
+            "substring",
+            "sum",
+            "symmetric",
+            "system",
+            "system_user",
+            "table",
+            "tables",
+            "tablesample",
+            "then",
+            "time",
+            "timestamp",
+            "timezone_hour",
+            "timezone_minute",
+            "tinyint",
+            "to",
+            "trailing",
+            "translate",
+            "translation",
+            "treat",
+            "trigger",
+            "trim",
+            "true",
+            "uescape",
+            "union",
+            "unique",
+            "unknown",
+            "unnest",
+            "update",
+            "upper",
+            "use",
+            "user",
+            "using",
+            "value",
+            "values",
+            "varbinary",
+            "varchar",
+            "varying",
+            "var_pop",
+            "var_samp",
+            "when",
+            "whenever",
+            "where",
+            "width_bucket",
+            "window",
+            "with",
+            "within",
+            "without",
+            "year",
         ]
     )
 
     def __init__(self, dialect):
-        super(SolrIdentifierPreparer, self).__init__(dialect, initial_quote='`', final_quote='`')
+        super().__init__(dialect, initial_quote="`", final_quote="`")
 
 
 class SolrDialect(default.DefaultDialect):
-    name = 'solrdbapi'
-    driver = 'rest'
+    name = "solrdbapi"
+    driver = "rest"
     preparer = SolrIdentifierPreparer
     statement_compiler = SolrCompiler
     type_compiler = SolrTypeCompiler
@@ -210,6 +512,7 @@ class SolrDialect(default.DefaultDialect):
     @classmethod
     def dbapi(cls):
         import sqlalchemy_solr.solrdbapi as module
+
         return module
 
     def do_rollback(self, dbapi_connection):
@@ -229,7 +532,7 @@ class SolrDialect(default.DefaultDialect):
         return []
 
     def get_schema_names(self, connection, **kw):
-        return tuple(['default'])
+        return tuple(["default"])
 
     def get_view_names(self, connection, schema=None, **kw):
         return []
@@ -239,7 +542,9 @@ class SolrDialect(default.DefaultDialect):
             self.get_columns(connection, table_name, schema)
             return True
         except exc.NoSuchTableError:
-            logging.error("Error in SolrDialect_http.has_table :: " + exc.NoSuchTableError)
+            logging.error(
+                "Error in SolrDialect_http.has_table :: " + exc.NoSuchTableError
+            )
             return False
 
     def _check_unicode_returns(self, connection, additional_tests=None):
@@ -251,8 +556,7 @@ class SolrDialect(default.DefaultDialect):
         return True
 
     def object_as_dict(self):
-        return {c.key: getattr(self, c.key)
-                for c in inspect(self).mapper.column_attrs}
+        return {c.key: getattr(self, c.key) for c in inspect(self).mapper.column_attrs}
 
     def get_data_type(self, data_type):
         try:

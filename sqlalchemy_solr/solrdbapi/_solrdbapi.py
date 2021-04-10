@@ -1,28 +1,42 @@
-# -*- coding: utf-8 -*-
+import logging
+
 from numpy import nan
 from pandas import DataFrame
 from requests import Session
-import logging
-from .solr_reflect import SolrTableReflection
-
-from . import api_globals
-from .api_exceptions import DatabaseError, \
-    ProgrammingError, CursorClosedException, ConnectionClosedException
-
 from sqlalchemy_solr.message_formatter import MessageFormatter
 
-apilevel = '2.0'
+from . import api_globals
+from .api_exceptions import ConnectionClosedException
+from .api_exceptions import CursorClosedException
+from .api_exceptions import DatabaseError
+from .api_exceptions import ProgrammingError
+from .solr_reflect import SolrTableReflection
+
+apilevel = "2.0"
 threadsafety = 3
-paramstyle = 'qmark'
+paramstyle = "qmark"
 default_storage_plugin = ""
 
 # Python DB API 2.0 classes
-class Cursor(object):
+
+
+class Cursor:
 
     mf = MessageFormatter()
 
-    def __init__(self, host, db, username, password, server_path, collection, 
-            port, proto, session, conn):
+    def __init__(
+        self,
+        host,
+        db,
+        username,
+        password,
+        server_path,
+        collection,
+        port,
+        proto,
+        session,
+        conn,
+    ):
 
         self.arraysize = 1
         self.db = db
@@ -44,9 +58,8 @@ class Cursor(object):
         self.lastrowid = None
         self.default_storage_plugin = None
 
-
     # Decorator for methods which require connection
-    def connected(func): # pylint: disable=no-self-argument
+    def connected(func):  # pylint: disable=no-self-argument # noqa: B902
         def func_wrapper(self, *args, **kwargs):
             if self._connected is False:
                 logging.error(self.mf.format("Error in Cursor.func_wrapper"))
@@ -55,7 +68,7 @@ class Cursor(object):
                 logging.error(self.mf.format("Error in Cursor.func_wrapper"))
                 raise ConnectionClosedException("Connection object is closed")
             else:
-                return func(self, *args, **kwargs) # pylint: disable=not-callable
+                return func(self, *args, **kwargs)  # pylint: disable=not-callable
 
         return func_wrapper
 
@@ -65,22 +78,34 @@ class Cursor(object):
         try:
             for param in parameters:
                 if type(param) == str:
-                    query = query.replace("?", "'{param}'".format(param=param), 1)
+                    query = query.replace("?", f"'{param}'", 1)
                 else:
                     query = query.replace("?", str(param), 1)
         except Exception as ex:
-            logging.error(Cursor.mf.format("Error in Cursor.substitute_in_query", str(ex)))
+            logging.error(
+                Cursor.mf.format("Error in Cursor.substitute_in_query", str(ex))
+            )
         return query
 
     @staticmethod
-    def submit_query(query, host, port, proto, username, password, server_path, collection, session):
+    def submit_query(
+        query, host, port, proto, username, password, server_path, collection, session
+    ):
         local_payload = api_globals._PAYLOAD.copy()
         local_payload["stmt"] = query
         return session.get(
-            proto + host + ":" + str(port) + "/" + server_path + "/" + collection + "/sql",
+            proto
+            + host
+            + ":"
+            + str(port)
+            + "/"
+            + server_path
+            + "/"
+            + collection
+            + "/sql",
             params=local_payload,
             headers=api_globals._HEADER,
-            auth=(username, password)
+            auth=(username, password),
         )
 
     @connected
@@ -102,34 +127,40 @@ class Cursor(object):
             self.password,
             self.server_path,
             self.collection,
-            self._session
+            self._session,
         )
 
         logging.info(self.mf.format("Query:", operation))
 
         if result.status_code != 200:
             logging.error(self.mf.format("Error in Cursor.execute"))
-            raise ProgrammingError(result.json().get("errorMessage", "ERROR"), result.status_code)
+            raise ProgrammingError(
+                result.json().get("errorMessage", "ERROR"), result.status_code
+            )
         else:
-            rows = result.json()["result-set"]['docs']
+            rows = result.json()["result-set"]["docs"]
             if "EXCEPTION" in rows[0]:
                 raise Exception(rows[0]["EXCEPTION"])
             columns = []
             if "EOF" in rows[-1]:
                 del rows[-1]
             if len(rows) > 0:
-                columns=rows[0].keys()
-            
-            self._resultSet = (
-                DataFrame(data=rows, columns=columns).fillna(value=nan)
+                columns = rows[0].keys()
+
+            self._resultSet = DataFrame(data=rows, columns=columns).fillna(value=nan)
+
+            column_names, column_types = SolrTableReflection.reflect_column_types(
+                self._resultSet, operation
             )
 
-            column_names, column_types = \
-                SolrTableReflection.reflect_column_types(self._resultSet, operation)
-
             # Get column metadata
-            column_metadata = list(map(
-                lambda cname, ctype: {"column": cname, "type": ctype}, column_names, column_types))
+            column_metadata = list(
+                map(
+                    lambda cname, ctype: {"column": cname, "type": ctype},
+                    column_names,
+                    column_types,
+                )
+            )
 
             self._resultSetMetadata = column_metadata
             self.rowcount = len(self._resultSet)
@@ -143,7 +174,7 @@ class Cursor(object):
                         [None for i in range(len(self._resultSet.dtypes.index))],
                         [None for i in range(len(self._resultSet.dtypes.index))],
                         [None for i in range(len(self._resultSet.dtypes.index))],
-                        [True for i in range(len(self._resultSet.dtypes.index))]
+                        [True for i in range(len(self._resultSet.dtypes.index))],
                     )
                 )
                 return self
@@ -177,7 +208,7 @@ class Cursor(object):
             except StopIteration:
                 pass
 
-            myresults = self._resultSet[index: index + fetch_size]
+            myresults = self._resultSet[index : index + fetch_size]
             return [tuple(x) for x in myresults.to_records(index=False)]
         except StopIteration:
             logging.error(self.mf.format("Catched StopIteration in fetchmany"))
@@ -185,9 +216,10 @@ class Cursor(object):
 
     @connected
     def fetchall(self):
-        # We can't just return a dataframe to sqlalchemy, it has to be a list of tuples...
+        # We can't just return a dataframe to sqlalchemy,
+        # it has to be a list of tuples...
         try:
-            remaining = self._resultSet[next(self._resultSetStatus):]
+            remaining = self._resultSet[next(self._resultSetStatus) :]
             self._resultSetStatus = iter(tuple())
             return [tuple(x) for x in remaining.to_records(index=False)]
 
@@ -206,12 +238,22 @@ class Cursor(object):
         return self._resultSet.iterrows()
 
 
-class Connection(object):
-    
+class Connection:
+
     mf = MessageFormatter()
-    
-    def __init__(self, host, db, username, password, server_path, 
-            collection, port, proto, session):
+
+    def __init__(
+        self,
+        host,
+        db,
+        username,
+        password,
+        server_path,
+        collection,
+        port,
+        proto,
+        session,
+    ):
 
         self.host = host
         self.db = db
@@ -227,14 +269,16 @@ class Connection(object):
         SolrTableReflection.connection = self
 
     # Decorator for methods which require connection
-    def connected(func): # pylint: disable=no-self-argument
-
+    def connected(func):  # pylint: disable=no-self-argument # noqa: B902
         def func_wrapper(self, *args, **kwargs):
             if self._connected is False:
-                logging.error(self.mf.format("ConnectionClosedException in func_wrapper"))
+                logging.error(
+                    self.mf.format("ConnectionClosedException in func_wrapper")
+                )
                 raise ConnectionClosedException("Connection object is closed")
             else:
-                return func(self, *args, **kwargs) # pylint: disable=not-callable
+                return func(self, *args, **kwargs)  # pylint: disable=not-callable
+
         return func_wrapper
 
     def is_connected(self):
@@ -255,7 +299,9 @@ class Connection(object):
             self._session.close()
             self.close()
         except Exception as ex:
-            logging.error(self.mf.format("Error in Connection.close_connection" + str(ex)))
+            logging.error(
+                self.mf.format("Error in Connection.close_connection" + str(ex))
+            )
             return False
         return True
 
@@ -272,14 +318,32 @@ class Connection(object):
 
     @connected
     def cursor(self):
-        return Cursor(self.host, self.db, self.username, self.password, 
-            self.server_path, self.collection, self.port, self.proto,
-            self._session, self)
+        return Cursor(
+            self.host,
+            self.db,
+            self.username,
+            self.password,
+            self.server_path,
+            self.collection,
+            self.port,
+            self.proto,
+            self._session,
+            self,
+        )
 
 
-def connect(host, port=8047, db=None, username=None, password=None,
-        server_path='solr', collection=None, use_ssl=False, 
-        verify_ssl=False, ca_certs=None):
+def connect(
+    host,
+    port=8047,
+    db=None,
+    username=None,
+    password=None,
+    server_path="solr",
+    collection=None,
+    use_ssl=False,
+    verify_ssl=False,
+    ca_certs=None,
+):
 
     session = Session()
     mf = MessageFormatter()
@@ -292,7 +356,7 @@ def connect(host, port=8047, db=None, username=None, password=None,
         else:
             session.verify = True
 
-    if use_ssl in [True, 'True', 'true']:
+    if use_ssl in [True, "True", "true"]:
         proto = "https://"
     else:
         proto = "http://"
@@ -301,15 +365,20 @@ def connect(host, port=8047, db=None, username=None, password=None,
         local_url = "/" + server_path + "/" + collection + "/select"
 
         response = session.get(
-            "{proto}{host}:{port}{url}".format(proto=proto, host=host, port=str(port), url=local_url),
+            "{proto}{host}:{port}{url}".format(
+                proto=proto, host=host, port=str(port), url=local_url
+            ),
             headers=api_globals._HEADER,
-            auth=(username, password)
+            auth=(username, password),
         )
 
         if response.status_code != 200:
             logging.error(mf.format("Error in connect"))
             logging.error(mf.format("Response code:", response.status_code))
-            raise DatabaseError(str(response.json()["errorMessage"]), response.status_code)
+            raise DatabaseError(
+                str(response.json()["errorMessage"]), response.status_code
+            )
 
-    return Connection(host, db, username, password, server_path, 
-            collection, port, proto, session)
+    return Connection(
+        host, db, username, password, server_path, collection, port, proto, session
+    )

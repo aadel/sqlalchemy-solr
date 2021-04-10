@@ -1,13 +1,14 @@
-from pandas import to_datetime
-import sqlparse
-from sqlparse.sql import IdentifierList, Identifier
-from sqlparse.tokens import Keyword
-from requests import Session
 import logging
 
+import sqlparse
+from pandas import to_datetime
+from requests import Session
 from sqlalchemy_solr import base
-from sqlalchemy_solr.solrdbapi import api_globals
 from sqlalchemy_solr.message_formatter import MessageFormatter
+from sqlalchemy_solr.solrdbapi import api_globals
+from sqlparse.sql import Identifier
+from sqlparse.sql import IdentifierList
+from sqlparse.tokens import Keyword
 
 
 class SolrTableReflection:
@@ -25,16 +26,22 @@ class SolrTableReflection:
                 session = Session()
 
                 result = session.get(
-                    SolrTableReflection.connection.proto +
-                    SolrTableReflection.connection.host + ":" +
-                    str(SolrTableReflection.connection.port) + "/" +
-                    SolrTableReflection.connection.server_path + "/" +
-                    table + "/admin/luke",
+                    SolrTableReflection.connection.proto
+                    + SolrTableReflection.connection.host
+                    + ":"
+                    + str(SolrTableReflection.connection.port)
+                    + "/"
+                    + SolrTableReflection.connection.server_path
+                    + "/"
+                    + table
+                    + "/admin/luke",
                     headers=api_globals._HEADER,
-                    auth=(SolrTableReflection.connection.username,
-                          SolrTableReflection.connection.password)
+                    auth=(
+                        SolrTableReflection.connection.username,
+                        SolrTableReflection.connection.password,
+                    ),
                 )
-                fields = result.json()['fields']
+                fields = result.json()["fields"]
 
                 SolrTableReflection.table_metadata_cache[table] = fields
 
@@ -44,18 +51,23 @@ class SolrTableReflection:
                 # Search for column type in cache
                 prototype = None
                 for table in tables:
-                    prototype = base._type_map[SolrTableReflection.table_metadata_cache[table][column]['type']]
+                    prototype = base._type_map[
+                        SolrTableReflection.table_metadata_cache[table][column]["type"]
+                    ]
                 if not prototype:
                     prototype = SolrTableReflection.infer_column_type(df, column)
                 types.append(prototype)
 
         except Exception as ex:
-            logging.error(SolrTableReflection.mf.format("Error in SolrReflect.reflect_column_types", str(ex)))
+            logging.error(
+                SolrTableReflection.mf.format(
+                    "Error in SolrReflect.reflect_column_types", str(ex)
+                )
+            )
         return names, types
 
     @staticmethod
     def infer_column_type(df, column):
-        types = []
         try:
             try:
                 df[column] = df[column].astype(int)
@@ -71,8 +83,11 @@ class SolrTableReflection:
                     except ValueError:
                         return "varchar"
         except Exception as ex:
-            logging.error(SolrTableReflection.mf.format(
-                "Error in SolrTableReflection.infer_column_types", str(ex)))
+            logging.error(
+                SolrTableReflection.mf.format(
+                    "Error in SolrTableReflection.infer_column_types", str(ex)
+                )
+            )
         return type
 
     @staticmethod
@@ -84,7 +99,7 @@ class SolrTableReflection:
                     return
                 else:
                     yield item
-            elif item.ttype is Keyword and item.value.upper() == 'FROM':
+            elif item.ttype is Keyword and item.value.upper() == "FROM":
                 from_seen = True
 
     @staticmethod

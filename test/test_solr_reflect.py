@@ -1,18 +1,20 @@
+import logging
+
+import sqlparse
 from numpy import nan
 from pandas import DataFrame
 from requests import Session
 from sqlalchemy import types
-from sqlparse.sql import IdentifierList, Identifier
-from sqlparse.tokens import Keyword, DML
-import sqlparse
-import logging
-
 from sqlalchemy_solr.message_formatter import MessageFormatter
-from sqlalchemy_solr.solrdbapi import SolrTableReflection, Cursor, Connection
+from sqlalchemy_solr.solrdbapi import Connection
+from sqlalchemy_solr.solrdbapi import Cursor
+from sqlalchemy_solr.solrdbapi import SolrTableReflection
+from sqlparse.sql import Identifier
+from sqlparse.sql import IdentifierList
+from sqlparse.tokens import Keyword
 
 
 class TestSolrTableReflection:
-
     def extract_from_part(self, parsed):
         from_seen = False
         for item in parsed.tokens:
@@ -21,7 +23,7 @@ class TestSolrTableReflection:
                     return
                 else:
                     yield item
-            elif item.ttype is Keyword and item.value.upper() == 'FROM':
+            elif item.ttype is Keyword and item.value.upper() == "FROM":
                 from_seen = True
 
     def extract_table_identifiers(self, token_stream):
@@ -47,37 +49,41 @@ class TestSolrTableReflection:
         session = Session()
         mf = MessageFormatter()
 
-        SolrTableReflection.connection = Connection(settings['HOST'], 'test',
-                                                    settings['SOLR_USER'],
-                                                    settings['SOLR_PASS'],
-                                                    settings['SERVER_PATH'],
-                                                    settings['SOLR_WORKER_COLLECTION_NAME'],
-                                                    settings['PORT'],
-                                                    settings['PROTO'],
-                                                    session)
+        SolrTableReflection.connection = Connection(
+            settings["HOST"],
+            "test",
+            settings["SOLR_USER"],
+            settings["SOLR_PASS"],
+            settings["SERVER_PATH"],
+            settings["SOLR_WORKER_COLLECTION_NAME"],
+            settings["PORT"],
+            settings["PROTO"],
+            session,
+        )
         result = Cursor.submit_query(
             Cursor.substitute_in_query(sql, []),
-            settings['HOST'],
-            settings['PORT'],
-            settings['PROTO'],
-            settings['SOLR_USER'],
-            settings['SOLR_PASS'],
-            settings['SERVER_PATH'],
-            settings['SOLR_WORKER_COLLECTION_NAME'],
-            session
+            settings["HOST"],
+            settings["PORT"],
+            settings["PROTO"],
+            settings["SOLR_USER"],
+            settings["SOLR_PASS"],
+            settings["SERVER_PATH"],
+            settings["SOLR_WORKER_COLLECTION_NAME"],
+            session,
         )
 
-        rows = result.json()["result-set"]['docs']
+        rows = result.json()["result-set"]["docs"]
 
         assert len(rows) > 0
 
         columns = rows[0].keys()
 
-        _resultSet = (DataFrame(data=rows, columns=columns).fillna(value=nan))
+        _resultSet = DataFrame(data=rows, columns=columns).fillna(value=nan)
 
         logging.info(mf.format("Query:", sql))
 
-        tables = ', '.join(self.extract_tables(sql))
+        tables = ", ".join(self.extract_tables(sql))
+        logging.info(mf.format("Tables:", tables))
 
         # assert settings['SOLR_WORKER_COLLECTION_NAME'] in tables
         reflected_data_types = SolrTableReflection.reflect_column_types(_resultSet, sql)

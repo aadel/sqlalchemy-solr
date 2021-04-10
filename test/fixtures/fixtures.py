@@ -1,20 +1,24 @@
 import json
 import os
+
 import pysolr
 
 
 class SalesFixture:
 
     TIMEOUT = 10
-    COLLECTION_NAME = 'sales_test_'
-    FILE_NAME = 'sales.jsonl'
+    COLLECTION_NAME = "sales_test_"
+    FILE_NAME = "sales.jsonl"
     solr = None
-    
+
     def __init__(self, base_url):
         self.base_url = base_url
-        self.solr = pysolr.Solr(self.base_url + '/' + self.COLLECTION_NAME,
-            always_commit=True, timeout=SalesFixture.TIMEOUT)
-        
+        self.solr = pysolr.Solr(
+            self.base_url + "/" + self.COLLECTION_NAME,
+            always_commit=True,
+            timeout=SalesFixture.TIMEOUT,
+        )
+
     def index_jsonl(self, file_path):
 
         data = []
@@ -33,8 +37,8 @@ class SalesFixture:
 
     def truncate_collection(self):
         try:
-            self.solr.delete(q='*:*')
-        except pysolr.SolrError as e:
+            self.solr.delete(q="*:*")
+        except pysolr.SolrError:
             pass
 
     def index(self):

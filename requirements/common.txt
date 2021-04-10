@@ -1,2 +1,3 @@
 sqlalchemy
 python-dateutil
+pre-commit

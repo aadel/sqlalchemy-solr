@@ -32,7 +32,7 @@ engine = create_engine('solr://solr:8983/solr/examples_books')
 with engine.connect() as connection:
     result = connection.execute(text("SELECT sequence_i, genre_s FROM examples_books"))
     for row in result:
-        print("Sequence: {}, Genre: {}".format(row['sequence_i'], row['genre_s']))      
+        print("Sequence: {}, Genre: {}".format(row['sequence_i'], row['genre_s']))
 ```
 
 ## Testing

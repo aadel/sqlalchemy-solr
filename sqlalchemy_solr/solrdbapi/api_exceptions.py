@@ -1,18 +1,10 @@
-# -*- coding: utf-8 -*-
-
-
-class Warning(Exception):
-    pass
-
-
-class Error(Exception):
+class Error(Exception):  # noqa: B903
     def __init__(self, message, httperror):
         self.message = message
         self.httperror = httperror
 
 
 class AuthError(Error):
-
     def __str__(self):
         return repr(
             "{msg} {type} {err}".format(
@@ -24,7 +16,6 @@ class AuthError(Error):
 
 
 class DatabaseError(Error):
-
     def __str__(self):
         return repr(
             "{msg} {type} {err}".format(
@@ -36,7 +27,6 @@ class DatabaseError(Error):
 
 
 class ProgrammingError(Error):
-
     def __str__(self):
         return repr(
             "{msg} {type} {err}".format(
@@ -48,7 +38,6 @@ class ProgrammingError(Error):
 
 
 class CursorClosedException(Error):
-
     def __init__(self, message):
         self.message = message
 
@@ -57,7 +46,6 @@ class CursorClosedException(Error):
 
 
 class ConnectionClosedException(Error):
-
     def __init__(self, message):
         self.message = message
 

@@ -11,27 +11,24 @@
 #
 # The above copyright notice and this permission notice shall be included in all copies or
 # substantial portions of the Software.
-
+#
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
 # INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
 # PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE
 # FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
-
-
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import unicode_literals
-from sqlalchemy.engine import default
-from requests import Session
-from .base import SolrDialect
-from sqlalchemy_solr.solrdbapi import api_globals
 import logging
 
+from requests import Session
+from sqlalchemy.engine import default
+from sqlalchemy_solr.solrdbapi import api_globals
+
+from .base import SolrDialect
 from .message_formatter import MessageFormatter
 
-logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
+logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
 
 
 class SolrDialect_http(SolrDialect):
@@ -43,29 +40,29 @@ class SolrDialect_http(SolrDialect):
         self.supported_extensions = []
 
     def create_connect_args(self, url, **kwargs):
-        
+
         url_port = url.port or 8047
-        qargs = {'host': url.host, 'port': url_port}
+        qargs = {"host": url.host, "port": url_port}
 
         try:
-            db_parts = url.database.split('/')
+            db_parts = url.database.split("/")
             db = ".".join(db_parts)
 
             self.proto = "http://"
 
-            if 'use_ssl' in kwargs:
-                if kwargs['use_ssl'] in [True, 'True', 'true']:
+            if "use_ssl" in kwargs:
+                if kwargs["use_ssl"] in [True, "True", "true"]:
                     self.proto = "https://"
-                    
+
             # Mapping server path and collection
             if db_parts[0]:
                 server_path = db_parts[0]
             else:
-                raise AttributeError('Missing server path')
+                raise AttributeError("Missing server path")
             if db_parts[1]:
                 collection = db_parts[1]
             else:
-                raise AttributeError('Missing collection')
+                raise AttributeError("Missing collection")
 
             # Save this for later use.
             self.host = url.host
@@ -77,31 +74,39 @@ class SolrDialect_http(SolrDialect):
             self.collection = collection
 
             qargs.update(url.query)
-            qargs['db'] = db
-            qargs['server_path'] = server_path
-            qargs['collection'] = collection
-            qargs['username'] = url.username
-            qargs['password'] = url.password
+            qargs["db"] = db
+            qargs["server_path"] = server_path
+            qargs["collection"] = collection
+            qargs["username"] = url.username
+            qargs["password"] = url.password
 
         except Exception as ex:
-            logging.error(self.mf
-                .format("Error in SolrDialect_http.create_connect_args :: ", str(ex)))
+            logging.error(
+                self.mf.format(
+                    "Error in SolrDialect_http.create_connect_args :: ", str(ex)
+                )
+            )
         return [], qargs
 
     def get_table_names(self, connection, schema=None, **kw):
         session = Session()
-        
+
         local_payload = api_globals._PAYLOAD.copy()
-        local_payload['action'] = 'LIST'
+        local_payload["action"] = "LIST"
         try:
             result = session.get(
-                self.proto + self.host + ":" + str(self.port) + "/" + 
-                    self.server_path + "/admin/collections",
+                self.proto
+                + self.host
+                + ":"
+                + str(self.port)
+                + "/"
+                + self.server_path
+                + "/admin/collections",
                 params=local_payload,
                 headers=api_globals._HEADER,
-                auth=(self.username, self.password)
+                auth=(self.username, self.password),
             )
-            tables_names = result.json()['collections']
+            tables_names = result.json()["collections"]
         except Exception as ex:
             logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
 
@@ -113,21 +118,28 @@ class SolrDialect_http(SolrDialect):
         session = Session()
 
         local_payload = api_globals._PAYLOAD.copy()
-        local_payload['action'] = 'LIST'
+        local_payload["action"] = "LIST"
         try:
             result = session.get(
-                self.proto + self.host + ":" + str(self.port) + "/" + 
-                    self.server_path + "/" + table_name + "/admin/luke",
+                self.proto
+                + self.host
+                + ":"
+                + str(self.port)
+                + "/"
+                + self.server_path
+                + "/"
+                + table_name
+                + "/admin/luke",
                 params=local_payload,
                 headers=api_globals._HEADER,
-                auth=(self.username, self.password)
+                auth=(self.username, self.password),
             )
-            fields = result.json()['fields']
+            fields = result.json()["fields"]
             for field in fields:
                 column = {
                     "name": field,
-                    "type": self.get_data_type(fields[field]['type']),
-                    "longType": self.get_data_type(fields[field]['type'])
+                    "type": self.get_data_type(fields[field]["type"]),
+                    "longType": self.get_data_type(fields[field]["type"]),
                 }
                 columns.append(column)
             return columns
