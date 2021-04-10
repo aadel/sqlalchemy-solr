@@ -1,4 +1,3 @@
-import re
 from sqlalchemy.sql import compiler
 
 

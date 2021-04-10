@@ -1,7 +1,7 @@
 from pandas import to_datetime
 import sqlparse
 from sqlparse.sql import IdentifierList, Identifier
-from sqlparse.tokens import Keyword, DML
+from sqlparse.tokens import Keyword
 from requests import Session
 import logging
 

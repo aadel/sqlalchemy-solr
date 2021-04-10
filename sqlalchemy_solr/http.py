@@ -23,26 +23,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
 from __future__ import unicode_literals
-from sqlalchemy import pool
 from sqlalchemy.engine import default
 from requests import Session
-from .base import SolrDialect, SolrIdentifierPreparer, SolrCompiler
+from .base import SolrDialect
 from sqlalchemy_solr.solrdbapi import api_globals
 import logging
 
 from .message_formatter import MessageFormatter
 
-try:
-    from sqlalchemy.sql.compiler import SQLCompiler
-except ImportError:
-    from sqlalchemy.sql.compiler import DefaultCompiler as SQLCompiler
-
 logging.basicConfig(format='%(asctime)s - %(message)s', level=logging.ERROR)
 
-try:
-    from sqlalchemy.types import BigInteger
-except ImportError:
-    from sqlalchemy.databases.mysql import MSBigInteger as BigInteger
 
 class SolrDialect_http(SolrDialect):
 

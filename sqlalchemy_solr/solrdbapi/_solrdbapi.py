@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-from json import dumps
 from numpy import nan
-from pandas import DataFrame, to_datetime
+from pandas import DataFrame
 from requests import Session
-import re
 import logging
 from .solr_reflect import SolrTableReflection
 
 from . import api_globals
-from .api_exceptions import Error, Warning, AuthError, DatabaseError, \
+from .api_exceptions import DatabaseError, \
     ProgrammingError, CursorClosedException, ConnectionClosedException
 
 from sqlalchemy_solr.message_formatter import MessageFormatter
