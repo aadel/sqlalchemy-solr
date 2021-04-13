@@ -1,53 +1,18 @@
-import logging
-
-import sqlparse
 from numpy import nan
 from pandas import DataFrame
 from requests import Session
 from sqlalchemy import types
-from sqlalchemy_solr.message_formatter import MessageFormatter
 from sqlalchemy_solr.solrdbapi import Connection
 from sqlalchemy_solr.solrdbapi import Cursor
 from sqlalchemy_solr.solrdbapi import SolrTableReflection
-from sqlparse.sql import Identifier
-from sqlparse.sql import IdentifierList
-from sqlparse.tokens import Keyword
 
 
 class TestSolrTableReflection:
-    def extract_from_part(self, parsed):
-        from_seen = False
-        for item in parsed.tokens:
-            if from_seen:
-                if item.ttype is Keyword:
-                    return
-                else:
-                    yield item
-            elif item.ttype is Keyword and item.value.upper() == "FROM":
-                from_seen = True
-
-    def extract_table_identifiers(self, token_stream):
-        for item in token_stream:
-            if isinstance(item, IdentifierList):
-                for identifier in item.get_identifiers():
-                    yield identifier.get_name()
-            elif isinstance(item, Identifier):
-                yield item.get_name()
-            # It's a bug to check for Keyword here, but in the example
-            # above some tables names are identified as keywords...
-            elif item.ttype is Keyword:
-                yield item.value
-
-    def extract_tables(self, sql):
-        stream = self.extract_from_part(sqlparse.parse(sql)[0])
-        return list(self.extract_table_identifiers(stream))
-
-    def test_solr_reflect(self, settings):
+    def test_solr_columns_reflection(self, settings):
         sql = """
-        SELECT 1 FROM (VALUES(1))
+        SELECT CITY_s, PHONE_ss FROM sales_test_
         """
         session = Session()
-        mf = MessageFormatter()
 
         SolrTableReflection.connection = Connection(
             settings["HOST"],
@@ -80,12 +45,12 @@ class TestSolrTableReflection:
 
         _resultSet = DataFrame(data=rows, columns=columns).fillna(value=nan)
 
-        logging.info(mf.format("Query:", sql))
-
-        tables = ", ".join(self.extract_tables(sql))
-        logging.info(mf.format("Tables:", tables))
-
-        # assert settings['SOLR_WORKER_COLLECTION_NAME'] in tables
         reflected_data_types = SolrTableReflection.reflect_column_types(_resultSet, sql)
-        assert (["CITY_s"], [types.VARCHAR]) == reflected_data_types
-        assert (["PHONE_ss"], [types.ARRAY]) == reflected_data_types
+
+        columns = {
+            k: v for (k, v) in zip(reflected_data_types[0], reflected_data_types[1])
+        }
+
+        assert isinstance(columns["CITY_s"], types.VARCHAR)
+        assert isinstance(columns["PHONE_ss"], types.ARRAY)
+        assert isinstance(columns["PHONE_ss"].item_type, types.VARCHAR)
