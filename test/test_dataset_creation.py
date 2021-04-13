@@ -3,7 +3,7 @@ from requests import Session
 from .steps import TestSteps
 
 
-class TestDBCreation:
+class TestDatasetCreation:
     def test_db_creation(self, settings):
         test_steps = TestSteps(settings)
         session = Session()

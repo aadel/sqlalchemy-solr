@@ -21,7 +21,7 @@ class TestGetColumns:
         ("ORDERDATE_s", "VARCHAR"),
         ("ORDERLINENUMBER_i", "INTEGER"),
         ("ORDERNUMBER_i", "INTEGER"),
-        ("PHONE_s", "VARCHAR"),
+        ("PHONE_ss", "VARCHAR"),
         ("POSTALCODE_s", "VARCHAR"),
         ("PRICEEACH_f", "FLOAT"),
         ("PRODUCTCODE_s", "VARCHAR"),
