@@ -158,7 +158,7 @@ class SolrCompiler(compiler.SQLCompiler):
                         else:
                             parser.parse(c.right.text)
                         kw[str(c.left)][c.operator] = c
-                    except (ValueError, TypeError):
+                    except (AttributeError, ValueError, TypeError):
                         continue
 
         return super().visit_clauselist(clauselist, **kw)
