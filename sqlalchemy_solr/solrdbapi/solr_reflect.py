@@ -51,9 +51,12 @@ class SolrTableReflection:
                 # Search for column type in cache
                 prototype = None
                 for table in tables:
-                    prototype = base._type_map[
-                        SolrTableReflection.table_metadata_cache[table][column]["type"]
-                    ]
+                    if column in SolrTableReflection.table_metadata_cache[table]:
+                        prototype = base._type_map[
+                            SolrTableReflection.table_metadata_cache[table][column][
+                                "type"
+                            ]
+                        ]
                 if not prototype:
                     prototype = SolrTableReflection.infer_column_type(df, column)
                 types.append(prototype)
