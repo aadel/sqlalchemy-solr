@@ -1,3 +1,11 @@
-sqlalchemy
-python-dateutil
+sqlalchemy~=1.4.7
+python-dateutil~=2.8.1
 pre-commit
+
+pysolr~=3.9.0
+pytest~=6.2.2
+requests~=2.25.1
+numpy~=1.20.1
+pandas~=1.2.2
+setuptools~=53.0.0
+sqlparse~=0.4.1

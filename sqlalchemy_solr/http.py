@@ -36,6 +36,14 @@ class SolrDialect_http(SolrDialect):
     mf = MessageFormatter()
 
     def __init__(self, **kw):
+        self.proto = None
+        self.host = None
+        self.port = None
+        self.server_path = None
+        self.collection = None
+        self.db = None
+        self.username = None
+        self.password = None
         default.DefaultDialect.__init__(self, **kw)
         self.supported_extensions = []
 
