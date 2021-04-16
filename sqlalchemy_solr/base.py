@@ -542,9 +542,7 @@ class SolrDialect(default.DefaultDialect):
             self.get_columns(connection, table_name, schema)
             return True
         except exc.NoSuchTableError:
-            logging.error(
-                "Error in SolrDialect_http.has_table :: " + exc.NoSuchTableError
-            )
+            logging.exception("Error in SolrDialect_http.has_table")
             return False
 
     def _check_unicode_returns(self, connection, additional_tests=None):

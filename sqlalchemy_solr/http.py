@@ -80,11 +80,9 @@ class SolrDialect_http(SolrDialect):
             qargs["username"] = url.username
             qargs["password"] = url.password
 
-        except Exception as ex:
-            logging.error(
-                self.mf.format(
-                    "Error in SolrDialect_http.create_connect_args :: ", str(ex)
-                )
+        except Exception:
+            logging.exception(
+                self.mf.format("Error in SolrDialect_http.create_connect_args")
             )
         return [], qargs
 
@@ -107,8 +105,8 @@ class SolrDialect_http(SolrDialect):
                 auth=(self.username, self.password),
             )
             tables_names = result.json()["collections"]
-        except Exception as ex:
-            logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
+        except Exception:
+            logging.exception("Error in SolrDialect_http.get_table_names")
 
         return tuple(tables_names)
 
@@ -143,5 +141,5 @@ class SolrDialect_http(SolrDialect):
                 }
                 columns.append(column)
             return columns
-        except Exception as ex:
-            logging.error("Error in SolrDialect_http.get_table_names :: " + str(ex))
+        except Exception:
+            logging.exception("Error in SolrDialect_http.get_table_names")

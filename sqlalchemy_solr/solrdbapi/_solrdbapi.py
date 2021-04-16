@@ -81,10 +81,8 @@ class Cursor:
                     query = query.replace("?", f"'{param}'", 1)
                 else:
                     query = query.replace("?", str(param), 1)
-        except Exception as ex:
-            logging.error(
-                Cursor.mf.format("Error in Cursor.substitute_in_query", str(ex))
-            )
+        except Exception:
+            logging.exception(Cursor.mf.format("Error in Cursor.substitute_in_query"))
         return query
 
     @staticmethod
@@ -178,8 +176,8 @@ class Cursor:
                     )
                 )
                 return self
-            except Exception as ex:
-                logging.error(self.mf.format("Error in Cursor.execute", str(ex)))
+            except Exception:
+                logging.exception(self.mf.format("Error in Cursor.execute"))
 
     @connected
     def fetchone(self):
@@ -289,7 +287,7 @@ class Connection:
                 else:
                     self._connected = False
         except Exception:
-            logging.error(self.mf.format("Error in Connection.is_connected"))
+            logging.exception(self.mf.format("Error in Connection.is_connected"))
             print(Exception)
         return False
 
@@ -298,10 +296,8 @@ class Connection:
         try:
             self._session.close()
             self.close()
-        except Exception as ex:
-            logging.error(
-                self.mf.format("Error in Connection.close_connection" + str(ex))
-            )
+        except Exception:
+            logging.exception(self.mf.format("Error in Connection.close_connection"))
             return False
         return True
 

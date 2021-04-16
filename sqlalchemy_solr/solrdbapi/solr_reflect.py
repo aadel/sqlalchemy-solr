@@ -61,10 +61,10 @@ class SolrTableReflection:
                     prototype = SolrTableReflection.infer_column_type(df, column)
                 types.append(prototype)
 
-        except Exception as ex:
-            logging.error(
+        except Exception:
+            logging.exception(
                 SolrTableReflection.mf.format(
-                    "Error in SolrReflect.reflect_column_types", str(ex)
+                    "Error in SolrReflect.reflect_column_types"
                 )
             )
         return names, types
@@ -85,10 +85,10 @@ class SolrTableReflection:
                         return "timestamp"
                     except ValueError:
                         return "varchar"
-        except Exception as ex:
-            logging.error(
+        except Exception:
+            logging.exception(
                 SolrTableReflection.mf.format(
-                    "Error in SolrTableReflection.infer_column_types", str(ex)
+                    "Error in SolrTableReflection.infer_column_types"
                 )
             )
         return type
