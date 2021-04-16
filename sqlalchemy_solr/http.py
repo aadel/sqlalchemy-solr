@@ -105,10 +105,11 @@ class SolrDialect_http(SolrDialect):
                 auth=(self.username, self.password),
             )
             tables_names = result.json()["collections"]
+
+            return tuple(tables_names)
+
         except Exception:
             logging.exception("Error in SolrDialect_http.get_table_names")
-
-        return tuple(tables_names)
 
     def get_columns(self, connection, table_name, schema=None, **kw):
         columns = []
