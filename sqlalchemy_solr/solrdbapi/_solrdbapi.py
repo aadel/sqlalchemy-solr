@@ -3,9 +3,10 @@ import logging
 from numpy import nan
 from pandas import DataFrame
 from requests import Session
+from sqlalchemy_solr.api_globals import _HEADER
+from sqlalchemy_solr.api_globals import _PAYLOAD
 from sqlalchemy_solr.message_formatter import MessageFormatter
 
-from . import api_globals
 from .api_exceptions import ConnectionClosedException
 from .api_exceptions import CursorClosedException
 from .api_exceptions import DatabaseError
@@ -89,7 +90,7 @@ class Cursor:
     def submit_query(
         query, host, port, proto, username, password, server_path, collection, session
     ):
-        local_payload = api_globals._PAYLOAD.copy()
+        local_payload = _PAYLOAD.copy()
         local_payload["stmt"] = query
         return session.get(
             proto
@@ -102,7 +103,7 @@ class Cursor:
             + collection
             + "/sql",
             params=local_payload,
-            headers=api_globals._HEADER,
+            headers=_HEADER,
             auth=(username, password),
         )
 
@@ -364,7 +365,7 @@ def connect(
             "{proto}{host}:{port}{url}".format(
                 proto=proto, host=host, port=str(port), url=local_url
             ),
-            headers=api_globals._HEADER,
+            headers=_HEADER,
             auth=(username, password),
         )
 

@@ -4,8 +4,8 @@ import sqlparse
 from pandas import to_datetime
 from requests import Session
 from sqlalchemy_solr import base
+from sqlalchemy_solr.api_globals import _HEADER
 from sqlalchemy_solr.message_formatter import MessageFormatter
-from sqlalchemy_solr.solrdbapi import api_globals
 from sqlparse.sql import Identifier
 from sqlparse.sql import IdentifierList
 from sqlparse.tokens import Keyword
@@ -35,7 +35,7 @@ class SolrTableReflection:
                     + "/"
                     + table
                     + "/admin/luke",
-                    headers=api_globals._HEADER,
+                    headers=_HEADER,
                     auth=(
                         SolrTableReflection.connection.username,
                         SolrTableReflection.connection.password,

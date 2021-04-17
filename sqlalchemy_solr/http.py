@@ -23,7 +23,8 @@ import logging
 
 from requests import Session
 from sqlalchemy.engine import default
-from sqlalchemy_solr.solrdbapi import api_globals
+from sqlalchemy_solr.api_globals import _HEADER
+from sqlalchemy_solr.api_globals import _PAYLOAD
 
 from .base import SolrDialect
 from .message_formatter import MessageFormatter
@@ -97,7 +98,7 @@ class SolrDialect_http(SolrDialect):
     def get_table_names(self, connection, schema=None, **kw):
         session = Session()
 
-        local_payload = api_globals._PAYLOAD.copy()
+        local_payload = _PAYLOAD.copy()
         local_payload["action"] = "LIST"
         try:
             result = session.get(
@@ -109,7 +110,7 @@ class SolrDialect_http(SolrDialect):
                 + self.server_path
                 + "/admin/collections",
                 params=local_payload,
-                headers=api_globals._HEADER,
+                headers=_HEADER,
                 auth=(self.username, self.password),
             )
             tables_names = result.json()["collections"]
@@ -124,7 +125,7 @@ class SolrDialect_http(SolrDialect):
 
         session = Session()
 
-        local_payload = api_globals._PAYLOAD.copy()
+        local_payload = _PAYLOAD.copy()
         local_payload["action"] = "LIST"
         try:
             result = session.get(
@@ -138,7 +139,7 @@ class SolrDialect_http(SolrDialect):
                 + table_name
                 + "/admin/luke",
                 params=local_payload,
-                headers=api_globals._HEADER,
+                headers=_HEADER,
                 auth=(self.username, self.password),
             )
             fields = result.json()["fields"]
