@@ -18,9 +18,11 @@ class SolrTableReflection:
 
     @staticmethod
     def reflect_column_types(df, operation):
-        tables = map(
-            lambda t: SolrTableReflection.unquote(t),
-            SolrTableReflection.extract_tables(operation),
+        tables = list(
+            map(
+                lambda t: SolrTableReflection.unquote(t),
+                SolrTableReflection.extract_tables(operation),
+            )
         )
         names, types = [], []
 
