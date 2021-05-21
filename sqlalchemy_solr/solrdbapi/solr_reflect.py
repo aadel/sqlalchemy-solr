@@ -18,7 +18,10 @@ class SolrTableReflection:
 
     @staticmethod
     def reflect_column_types(df, operation):
-        tables = SolrTableReflection.extract_tables(operation)
+        tables = map(
+            lambda t: SolrTableReflection.unquote(t),
+            SolrTableReflection.extract_tables(operation),
+        )
         names, types = [], []
 
         for table in tables:
@@ -121,3 +124,12 @@ class SolrTableReflection:
     def extract_tables(sql):
         stream = SolrTableReflection.extract_from_part(sqlparse.parse(sql)[0])
         return list(SolrTableReflection.extract_table_identifiers(stream))
+
+    @staticmethod
+    def unquote(val):
+        """Unquote labels."""
+        if val is None:
+            return
+        if val[0] in ('"', "'", "`") and val[0] == val[-1]:
+            val = val[1:-1]
+        return val
