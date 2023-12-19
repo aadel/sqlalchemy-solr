@@ -74,6 +74,12 @@ class Cursor:
         return func_wrapper
 
     @staticmethod
+    def filter_out_schema(string_query: str) -> str:
+        table_query = string_query.replace('FROM `default`.', 'FROM ')
+        logging.info(Cursor.mf.format(table_query))
+        return table_query
+    
+    @staticmethod
     def substitute_in_query(string_query, parameters):
         query = string_query
         try:
@@ -117,6 +123,7 @@ class Cursor:
 
     @connected
     def execute(self, operation, parameters=()):
+        operation = Cursor.filter_out_schema(operation)
         result = self.submit_query(
             self.substitute_in_query(operation, parameters),
             self.host,
