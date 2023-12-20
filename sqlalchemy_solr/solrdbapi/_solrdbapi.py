@@ -76,7 +76,7 @@ class Cursor:
     # Solr has no schema concept
     @staticmethod
     def filter_out_schema(string_query: str) -> str:
-        table_query = re.sub('FROM [`\'"]?.+[`\'"]?\.', 'FROM ', string_query)
+        table_query = re.sub('(?i)(FROM) [`\'"]?.+[`\'"]?\.', r'\1 ', string_query)
         logging.info(Cursor.mf.format(table_query))
         return table_query
     
