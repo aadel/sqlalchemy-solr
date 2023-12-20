@@ -1,4 +1,4 @@
-import logging
+import logging, re
 
 from numpy import nan
 from pandas import DataFrame
@@ -73,9 +73,10 @@ class Cursor:
 
         return func_wrapper
 
+    # Solr has no schema concept
     @staticmethod
     def filter_out_schema(string_query: str) -> str:
-        table_query = string_query.replace('FROM `default`.', 'FROM ')
+        table_query = re.sub('FROM [`\'"]?.+[`\'"]?\.', 'FROM ', string_query)
         logging.info(Cursor.mf.format(table_query))
         return table_query
     
