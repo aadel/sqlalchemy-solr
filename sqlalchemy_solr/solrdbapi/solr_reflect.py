@@ -20,7 +20,7 @@ class SolrTableReflection:
     def reflect_column_types(df, operation):
         tables = list(
             map(
-                lambda t: SolrTableReflection.unquote(t),
+                SolrTableReflection.unquote,
                 SolrTableReflection.extract_tables(operation),
             )
         )
