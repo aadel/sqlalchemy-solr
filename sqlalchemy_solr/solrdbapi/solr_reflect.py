@@ -101,8 +101,7 @@ class SolrTableReflection:
             if from_seen:
                 if item.ttype is Keyword:
                     return
-                else:
-                    yield item
+                yield item
             elif item.ttype is Keyword and item.value.upper() == "FROM":
                 from_seen = True
 

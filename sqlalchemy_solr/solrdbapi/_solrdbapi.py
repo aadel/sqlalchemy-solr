@@ -65,11 +65,11 @@ class Cursor:
             if self._connected is False:
                 logging.error(self.mf.format("Error in Cursor.func_wrapper"))
                 raise CursorClosedException("Cursor object is closed")
-            elif self.connection._connected is False:
+            if self.connection._connected is False:
                 logging.error(self.mf.format("Error in Cursor.func_wrapper"))
                 raise ConnectionClosedException("Connection object is closed")
-            else:
-                return func(self, *args, **kwargs)  # pylint: disable=not-callable
+            
+            return func(self, *args, **kwargs)  # pylint: disable=not-callable
 
         return func_wrapper
 
@@ -143,49 +143,49 @@ class Cursor:
             raise ProgrammingError(
                 result.json().get("errorMessage", "ERROR"), result.status_code
             )
-        else:
-            rows = result.json()["result-set"]["docs"]
-            if "EXCEPTION" in rows[0]:
-                raise Exception(rows[0]["EXCEPTION"])
-            columns = []
-            if "EOF" in rows[-1]:
-                del rows[-1]
-            if len(rows) > 0:
-                columns = rows[0].keys()
 
-            self._resultSet = DataFrame(data=rows, columns=columns).fillna(value=nan)
+        rows = result.json()["result-set"]["docs"]
+        if "EXCEPTION" in rows[0]:
+            raise Exception(rows[0]["EXCEPTION"])
+        columns = []
+        if "EOF" in rows[-1]:
+            del rows[-1]
+        if len(rows) > 0:
+            columns = rows[0].keys()
 
-            column_names, column_types = SolrTableReflection.reflect_column_types(
-                self._resultSet, operation
+        self._resultSet = DataFrame(data=rows, columns=columns).fillna(value=nan)
+
+        column_names, column_types = SolrTableReflection.reflect_column_types(
+            self._resultSet, operation
+        )
+
+        # Get column metadata
+        column_metadata = list(
+            map(
+                lambda cname, ctype: {"column": cname, "type": ctype},
+                column_names,
+                column_types,
             )
+        )
 
-            # Get column metadata
-            column_metadata = list(
-                map(
-                    lambda cname, ctype: {"column": cname, "type": ctype},
+        self._resultSetMetadata = column_metadata
+        self.rowcount = len(self._resultSet)
+        self._resultSetStatus = iter(range(len(self._resultSet)))
+        try:
+            self.description = tuple(
+                zip(
                     column_names,
                     column_types,
+                    [None for i in range(len(self._resultSet.dtypes.index))],
+                    [None for i in range(len(self._resultSet.dtypes.index))],
+                    [None for i in range(len(self._resultSet.dtypes.index))],
+                    [None for i in range(len(self._resultSet.dtypes.index))],
+                    [True for i in range(len(self._resultSet.dtypes.index))],
                 )
             )
-
-            self._resultSetMetadata = column_metadata
-            self.rowcount = len(self._resultSet)
-            self._resultSetStatus = iter(range(len(self._resultSet)))
-            try:
-                self.description = tuple(
-                    zip(
-                        column_names,
-                        column_types,
-                        [None for i in range(len(self._resultSet.dtypes.index))],
-                        [None for i in range(len(self._resultSet.dtypes.index))],
-                        [None for i in range(len(self._resultSet.dtypes.index))],
-                        [None for i in range(len(self._resultSet.dtypes.index))],
-                        [True for i in range(len(self._resultSet.dtypes.index))],
-                    )
-                )
-                return self
-            except Exception:
-                logging.exception(self.mf.format("Error in Cursor.execute"))
+            return self
+        except Exception:
+            logging.exception(self.mf.format("Error in Cursor.execute"))
 
     @connected
     def fetchone(self):
@@ -282,8 +282,8 @@ class Connection:
                     self.mf.format("ConnectionClosedException in func_wrapper")
                 )
                 raise ConnectionClosedException("Connection object is closed")
-            else:
-                return func(self, *args, **kwargs)  # pylint: disable=not-callable
+            
+            return func(self, *args, **kwargs)  # pylint: disable=not-callable
 
         return func_wrapper
 
@@ -292,8 +292,7 @@ class Connection:
             if self._connected is True:
                 if self._session:
                     return True
-                else:
-                    self._connected = False
+                self._connected = False
         except Exception:
             logging.exception(self.mf.format("Error in Connection.is_connected"))
             print(Exception)
