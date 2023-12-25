@@ -86,3 +86,17 @@ class TestFilteringOutSchema:
             result.context.statement
             == SELECT_CLAUSE_2
         )
+
+        SELECT_CLAUSE_1 = "SELECT sales_test_.`CITY_s` \nfrom sales_test_ \nWHERE TRUE"
+        SELECT_CLAUSE_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
+
+        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+            100
+        )  # pylint: disable=unsubscriptable-object
+
+        result = engine.execute(qry)
+
+        assert (
+            result.context.statement
+            == SELECT_CLAUSE_2
+        )
