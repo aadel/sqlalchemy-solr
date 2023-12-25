@@ -1,4 +1,4 @@
-import sqlalchemy.types as types
+from sqlalchemy import types
 
 
 class ARRAY(types.ARRAY):

@@ -1,4 +1,5 @@
-import logging, re
+import logging
+import re
 
 from numpy import nan
 from pandas import DataFrame

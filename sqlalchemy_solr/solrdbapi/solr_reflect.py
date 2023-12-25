@@ -3,12 +3,14 @@ import logging
 import sqlparse
 from pandas import to_datetime
 from requests import Session
-from sqlalchemy_solr import base
-from sqlalchemy_solr.api_globals import _HEADER
-from sqlalchemy_solr.message_formatter import MessageFormatter
+
 from sqlparse.sql import Identifier
 from sqlparse.sql import IdentifierList
 from sqlparse.tokens import Keyword
+
+from sqlalchemy_solr import base
+from sqlalchemy_solr.api_globals import _HEADER
+from sqlalchemy_solr.message_formatter import MessageFormatter
 
 
 class SolrTableReflection:
