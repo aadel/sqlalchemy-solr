@@ -7,7 +7,7 @@ class Error(Exception):  # noqa: B903
 class AuthError(Error):
     def __str__(self):
         return repr(
-            "{msg} {type} {err}".format(
+            "{msg} {type} {err}".format( # pylint: disable=consider-using-f-string
                 msg=self.message,
                 type="Authentication Error: Invalid User/Pass:",
                 err=self.httperror,
@@ -18,7 +18,7 @@ class AuthError(Error):
 class DatabaseError(Error):
     def __str__(self):
         return repr(
-            "{msg} {type} {err}".format(
+            "{msg} {type} {err}".format( # pylint: disable=consider-using-f-string
                 msg=self.message,
                 type="HTTP ERROR:",
                 err=self.httperror,
@@ -29,7 +29,7 @@ class DatabaseError(Error):
 class ProgrammingError(Error):
     def __str__(self):
         return repr(
-            "{msg} {type} {err}".format(
+            "{msg} {type} {err}".format( # pylint: disable=consider-using-f-string
                 msg=self.message,
                 type="HTTP ERROR:",
                 err=self.httperror,

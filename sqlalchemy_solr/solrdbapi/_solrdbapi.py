@@ -364,9 +364,7 @@ def connect(
 
         add_authorization(session, username, password, token)
         response = session.get(
-            "{proto}{host}:{port}{url}".format(
-                proto=proto, host=host, port=str(port), url=local_url
-            ),
+            f"{proto}{host}:{port}{local_url}",
             headers=_HEADER,
         )
 
