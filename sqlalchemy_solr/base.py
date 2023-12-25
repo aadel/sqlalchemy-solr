@@ -55,6 +55,7 @@ _type_map = {
 
 
 class SolrCompiler(compiler.SQLCompiler):
+    # pylint: disable=abstract-method
 
     merge_ops = (operators.ge, operators.gt, operators.le, operators.lt)
     bounds = {
@@ -489,6 +490,8 @@ class SolrIdentifierPreparer(compiler.IdentifierPreparer):
 
 
 class SolrDialect(default.DefaultDialect):
+    # pylint: disable=abstract-method
+
     name = "solrdbapi"
     driver = "rest"
     preparer = SolrIdentifierPreparer
