@@ -69,7 +69,7 @@ class Cursor:
             if self.connection._connected is False:
                 logging.error(self.mf.format("Error in Cursor.func_wrapper"))
                 raise ConnectionClosedException("Connection object is closed")
-            
+
             return func(self, *args, **kwargs)  # pylint: disable=not-callable
 
         return func_wrapper
@@ -80,7 +80,7 @@ class Cursor:
         table_query = re.sub('(?i)(FROM) [`\'"]?.+[`\'"]?\.', r'\1 ', string_query)
         logging.info(Cursor.mf.format(table_query))
         return table_query
-    
+
     @staticmethod
     def substitute_in_query(string_query, parameters):
         query = string_query
@@ -283,7 +283,7 @@ class Connection:
                     self.mf.format("ConnectionClosedException in func_wrapper")
                 )
                 raise ConnectionClosedException("Connection object is closed")
-            
+
             return func(self, *args, **kwargs)  # pylint: disable=not-callable
 
         return func_wrapper
