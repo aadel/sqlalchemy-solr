@@ -187,6 +187,7 @@ class Cursor:
             return self
         except Exception:
             logging.exception(self.mf.format("Error in Cursor.execute"))
+            return None
 
     @connected
     def fetchone(self):

@@ -128,7 +128,7 @@ class SolrTableReflection:
     def unquote(val):
         """Unquote labels."""
         if val is None:
-            return
+            return None
         if val[0] in ('"', "'", "`") and val[0] == val[-1]:
             val = val[1:-1]
         return val

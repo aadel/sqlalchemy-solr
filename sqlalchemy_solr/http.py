@@ -137,6 +137,7 @@ class SolrDialect_http(SolrDialect):
 
         except Exception:
             logging.exception("Error in SolrDialect_http.get_table_names")
+            return None
 
     def get_columns(self, connection, table_name, schema=None, **kw):
         columns = []
@@ -170,3 +171,4 @@ class SolrDialect_http(SolrDialect):
             return columns
         except Exception:
             logging.exception("Error in SolrDialect_http.get_table_names")
+            return None
