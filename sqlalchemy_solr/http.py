@@ -45,6 +45,8 @@ class SolrDialect_http(SolrDialect):
         self.db = None
         self.username = None
         self.password = None
+        self.token = None
+        self.session = None
         default.DefaultDialect.__init__(self, **kw)
         self.supported_extensions = []
 
@@ -62,6 +64,10 @@ class SolrDialect_http(SolrDialect):
             if "use_ssl" in kwargs:
                 if kwargs["use_ssl"] in [True, "True", "true"]:
                     self.proto = "https://"
+
+            if "token" in url.query:
+                if url.query["token"] is not None :
+                    self.token = url.query["token"]
 
             # Mapping server path and collection
             if db_parts[0]:
@@ -82,6 +88,16 @@ class SolrDialect_http(SolrDialect):
             self.server_path = server_path
             self.collection = collection
 
+            # Prepare a session with proper authorization handling.
+            session = Session()
+
+            if self.token is not None:
+                session.headers.update({'Authorization': f'Bearer {self.token}'})
+            else:
+                session.auth = (self.username, self.password)
+            # Utilize this session in other methods.
+            self.session = session
+
             qargs.update(url.query)
             qargs["db"] = db
             qargs["server_path"] = server_path
@@ -96,7 +112,7 @@ class SolrDialect_http(SolrDialect):
         return [], qargs
 
     def get_table_names(self, connection, schema=None, **kw):
-        session = Session()
+        session = self.session
 
         local_payload = _PAYLOAD.copy()
         local_payload["action"] = "LIST"
@@ -111,7 +127,6 @@ class SolrDialect_http(SolrDialect):
                 + "/admin/collections",
                 params=local_payload,
                 headers=_HEADER,
-                auth=(self.username, self.password),
             )
             tables_names = result.json()["collections"]
 
@@ -123,7 +138,7 @@ class SolrDialect_http(SolrDialect):
     def get_columns(self, connection, table_name, schema=None, **kw):
         columns = []
 
-        session = Session()
+        session = self.session
 
         local_payload = _PAYLOAD.copy()
         local_payload["action"] = "LIST"
@@ -140,7 +155,6 @@ class SolrDialect_http(SolrDialect):
                 + "/admin/luke",
                 params=local_payload,
                 headers=_HEADER,
-                auth=(self.username, self.password),
             )
             fields = result.json()["fields"]
             for field in fields:

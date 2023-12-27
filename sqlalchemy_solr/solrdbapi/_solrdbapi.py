@@ -111,7 +111,6 @@ class Cursor:
             + "/sql",
             params=local_payload,
             headers=_HEADER,
-            auth=(username, password),
         )
 
     @connected
@@ -348,6 +347,7 @@ def connect(
     use_ssl=False,
     verify_ssl=False,
     ca_certs=None,
+    token=None,
 ):
 
     session = Session()
@@ -369,12 +369,12 @@ def connect(
     if collection is not None:
         local_url = "/" + server_path + "/" + collection + "/select"
 
+        add_authorization(session, username, password, token)
         response = session.get(
             "{proto}{host}:{port}{url}".format(
                 proto=proto, host=host, port=str(port), url=local_url
             ),
             headers=_HEADER,
-            auth=(username, password),
         )
 
         if response.status_code != 200:
@@ -387,3 +387,9 @@ def connect(
     return Connection(
         host, db, username, password, server_path, collection, port, proto, session
     )
+
+def add_authorization(session, username, password, token):
+    if token is not None:
+        session.headers.update({'Authorization': f'Bearer {token}'})
+    else:
+        session.auth = (username, password)
