@@ -28,7 +28,7 @@ class SolrTableReflection:
 
         for table in tables:
             if table not in SolrTableReflection.table_metadata_cache:
-                session = Session()
+                session = SolrTableReflection.connection._session
 
                 result = session.get(
                     SolrTableReflection.connection.proto
@@ -41,10 +41,6 @@ class SolrTableReflection:
                     + table
                     + "/admin/luke",
                     headers=_HEADER,
-                    auth=(
-                        SolrTableReflection.connection.username,
-                        SolrTableReflection.connection.password,
-                    ),
                 )
                 fields = result.json()["fields"]
 
