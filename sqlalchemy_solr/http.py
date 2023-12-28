@@ -90,10 +90,11 @@ class SolrDialect_http(SolrDialect):
             # Prepare a session with proper authorization handling.
             session = Session()
             #session.verify property which is bydefault true so Handled here
-            session.verify = False
-            if "verify_ssl" in url.query and url.query["verify_ssl"] in [True, "True", "true"]:
+            if "verify_ssl" in url.query and url.query["verify_ssl"] in [False, "False", "false"]:
+                session.verify = False
+            else:
                 if "ca_certs" in url.query and url.query["ca_certs"] is not None:
-                    session.verify = url.query["ca_certs"]
+                    session.cert = url.query["ca_certs"]
                 else:
                     session.verify = True
 

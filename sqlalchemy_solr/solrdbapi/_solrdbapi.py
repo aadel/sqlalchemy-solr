@@ -345,7 +345,7 @@ def connect(
     server_path="solr",
     collection=None,
     use_ssl=False,
-    verify_ssl=False,
+    verify_ssl=None,
     ca_certs=None,
     token=None,
 ):
@@ -353,11 +353,11 @@ def connect(
     session = Session()
     mf = MessageFormatter()
 
-    if verify_ssl is False:
+    if verify_ssl is not None and verify_ssl in [False,"False","false"]:
         session.verify = False
     else:
         if ca_certs is not None:
-            session.verify = ca_certs
+            session.cert = ca_certs
         else:
             session.verify = True
 
