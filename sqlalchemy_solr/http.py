@@ -60,9 +60,8 @@ class SolrDialect_http(SolrDialect):
             db = ".".join(db_parts)
 
             self.proto = "http://"
-
-            if "use_ssl" in kwargs:
-                if kwargs["use_ssl"] in [True, "True", "true"]:
+            if "use_ssl" in url.query:
+                if url.query["use_ssl"] in [True, "True", "true"]:
                     self.proto = "https://"
 
             if "token" in url.query:
@@ -90,6 +89,9 @@ class SolrDialect_http(SolrDialect):
 
             # Prepare a session with proper authorization handling.
             session = Session()
+            #session.verify property which is bydefault true so Handled here
+            if "verify_ssl" in url.query and url.query["verify_ssl"] in [False, "False", "false"]:
+                session.verify = False
 
             if self.token is not None:
                 session.headers.update({'Authorization': f'Bearer {self.token}'})
