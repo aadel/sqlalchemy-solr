@@ -92,11 +92,6 @@ class SolrDialect_http(SolrDialect):
             #session.verify property which is bydefault true so Handled here
             if "verify_ssl" in url.query and url.query["verify_ssl"] in [False, "False", "false"]:
                 session.verify = False
-            else:
-                if "ca_certs" in url.query and url.query["ca_certs"] is not None:
-                    session.cert = url.query["ca_certs"]
-                else:
-                    session.verify = True
 
             if self.token is not None:
                 session.headers.update({'Authorization': f'Bearer {self.token}'})

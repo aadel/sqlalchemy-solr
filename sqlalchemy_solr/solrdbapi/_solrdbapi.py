@@ -346,20 +346,14 @@ def connect(
     collection=None,
     use_ssl=False,
     verify_ssl=None,
-    ca_certs=None,
     token=None,
 ):
 
     session = Session()
     mf = MessageFormatter()
-
+    # bydefault session.verify is set to True
     if verify_ssl is not None and verify_ssl in [False,"False","false"]:
         session.verify = False
-    else:
-        if ca_certs is not None:
-            session.cert = ca_certs
-        else:
-            session.verify = True
 
     if use_ssl in [True, "True", "true"]:
         proto = "https://"
