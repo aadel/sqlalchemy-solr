@@ -19,8 +19,13 @@ The package can either be installed through PyPi or from the source code.
 To connect to Solr with SQLAlchemy, the following URL pattern can be used:
 
 ```
-solr://<username>:<password>@<host>:<port>/solr/<collection>[?use_ssl=true|false]
+solr://<username>:<password>@<host>:<port>/solr/<collection>[?parameter=value]
 ```
+
+Supported parameters:
+
+1. `use_ssl`: a boolean parameter when set to `true` an HTTPS connection is used. Default value is `false`.
+2. `verify_ssl`: a boolean parameter that controls whether to verify SSL certificate. Default value is `true`.
 
 ## Basic Example
 
