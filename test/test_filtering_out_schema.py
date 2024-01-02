@@ -31,8 +31,8 @@ class TestFilteringOutSchema:
             autoload_with=engine,
         )
 
-        SELECT_CLAUSE_1 = "SELECT sales_test_.`CITY_s` \nFROM `default`.sales_test_ \nWHERE TRUE"
-        SELECT_CLAUSE_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
+        select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM `default`.sales_test_ \nWHERE TRUE"
+        select_statement_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
 
         qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
             100
@@ -42,11 +42,11 @@ class TestFilteringOutSchema:
 
         assert (
             result.context.statement
-            == SELECT_CLAUSE_2
+            == select_statement_2
         )
 
-        SELECT_CLAUSE_1 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_ \nWHERE TRUE"
-        SELECT_CLAUSE_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
+        select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_ \nWHERE TRUE"
+        select_statement_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
 
         qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
             100
@@ -56,11 +56,11 @@ class TestFilteringOutSchema:
 
         assert (
             result.context.statement
-            == SELECT_CLAUSE_2
+            == select_statement_2
         )
 
-        SELECT_CLAUSE_1 = "SELECT sales_test_.`CITY_s` \nFROM default.sales_test_ \nWHERE TRUE"
-        SELECT_CLAUSE_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
+        select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM default.sales_test_ \nWHERE TRUE"
+        select_statement_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
 
         qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
             100
@@ -70,11 +70,11 @@ class TestFilteringOutSchema:
 
         assert (
             result.context.statement
-            == SELECT_CLAUSE_2
+            == select_statement_2
         )
 
-        SELECT_CLAUSE_1 = "SELECT sales_test_.`CITY_s` \nFROM 'public'.sales_test_ \nWHERE TRUE"
-        SELECT_CLAUSE_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
+        select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM 'public'.sales_test_ \nWHERE TRUE"
+        select_statement_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
 
         qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
             100
@@ -84,11 +84,11 @@ class TestFilteringOutSchema:
 
         assert (
             result.context.statement
-            == SELECT_CLAUSE_2
+            == select_statement_2
         )
 
-        SELECT_CLAUSE_1 = "SELECT sales_test_.`CITY_s` \nfrom sales_test_ \nWHERE TRUE"
-        SELECT_CLAUSE_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
+        select_statement_1 = "SELECT sales_test_.`CITY_s` \nfrom sales_test_ \nWHERE TRUE"
+        select_statement_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
 
         qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
             100
@@ -98,5 +98,5 @@ class TestFilteringOutSchema:
 
         assert (
             result.context.statement
-            == SELECT_CLAUSE_2
+            == select_statement_2
         )
