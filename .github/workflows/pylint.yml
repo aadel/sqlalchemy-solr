@@ -22,5 +22,4 @@ jobs:
         pipenv install pylint
     - name: Analysing the code with pylint
       run: |
-        pipenv shell
-        pylint $(git ls-files '*.py') --disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
+        pipenv run pylint $(git ls-files '*.py') --disable=missing-module-docstring,missing-class-docstring,missing-function-docstring
