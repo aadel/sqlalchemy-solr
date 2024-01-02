@@ -43,9 +43,9 @@ class TestSolrTableReflection:
 
         columns = rows[0].keys()
 
-        _resultSet = DataFrame(data=rows, columns=columns).fillna(value=nan)
+        result_set = DataFrame(data=rows, columns=columns).fillna(value=nan)
 
-        reflected_data_types = SolrTableReflection.reflect_column_types(_resultSet, sql)
+        reflected_data_types = SolrTableReflection.reflect_column_types(result_set, sql)
 
         columns = {
             dict(zip(reflected_data_types[0], reflected_data_types[1]))

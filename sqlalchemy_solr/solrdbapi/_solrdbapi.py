@@ -14,10 +14,10 @@ from .api_exceptions import DatabaseError
 from .api_exceptions import ProgrammingError
 from .solr_reflect import SolrTableReflection
 
-apilevel = "2.0"
-threadsafety = 3
-paramstyle = "qmark"
-default_storage_plugin = ""
+apilevel = "2.0"                # pylint: disable=invalid-name
+threadsafety = 3                # pylint: disable=invalid-name
+paramstyle = "qmark"            # pylint: disable=invalid-name
+default_storage_plugin = ""     # pylint: disable=invalid-name
 
 # Python DB API 2.0 classes
 
@@ -53,9 +53,9 @@ class Cursor:
         self._session = session
         self._connected = True
         self.connection = conn
-        self._resultSet = None
-        self._resultSetMetadata = None
-        self._resultSetStatus = None
+        self._result_set = None
+        self._result_set_metadata = None
+        self._result_set_status = None
         self.rowcount = -1
         self.lastrowid = None
         self.default_storage_plugin = None
@@ -154,10 +154,10 @@ class Cursor:
         if len(rows) > 0:
             columns = rows[0].keys()
 
-        self._resultSet = DataFrame(data=rows, columns=columns).fillna(value=nan)
+        self._result_set = DataFrame(data=rows, columns=columns).fillna(value=nan)
 
         column_names, column_types = SolrTableReflection.reflect_column_types(
-            self._resultSet, operation
+            self._result_set, operation
         )
 
         # Get column metadata
@@ -169,19 +169,19 @@ class Cursor:
             )
         )
 
-        self._resultSetMetadata = column_metadata
-        self.rowcount = len(self._resultSet)
-        self._resultSetStatus = iter(range(len(self._resultSet)))
+        self._result_set_metadata = column_metadata
+        self.rowcount = len(self._result_set)
+        self._result_set_status = iter(range(len(self._result_set)))
         try:
             self.description = tuple(
                 zip(
                     column_names,
                     column_types,
-                    [None for i in range(len(self._resultSet.dtypes.index))],
-                    [None for i in range(len(self._resultSet.dtypes.index))],
-                    [None for i in range(len(self._resultSet.dtypes.index))],
-                    [None for i in range(len(self._resultSet.dtypes.index))],
-                    [True for i in range(len(self._resultSet.dtypes.index))],
+                    [None for i in range(len(self._result_set.dtypes.index))],
+                    [None for i in range(len(self._result_set.dtypes.index))],
+                    [None for i in range(len(self._result_set.dtypes.index))],
+                    [None for i in range(len(self._result_set.dtypes.index))],
+                    [True for i in range(len(self._result_set.dtypes.index))],
                 )
             )
             return self
@@ -193,7 +193,7 @@ class Cursor:
     def fetchone(self):
         try:
             # Added Tuple
-            return self._resultSet.iloc[next(self._resultSetStatus)]
+            return self._result_set.iloc[next(self._result_set_status)]
         except StopIteration:
             logging.error(self.mf.format("Catched StopIteration in fetchone"))
             # We need to put None rather than Series([]) because
@@ -209,14 +209,14 @@ class Cursor:
             fetch_size = size
 
         try:
-            index = next(self._resultSetStatus)
+            index = next(self._result_set_status)
             try:
                 for _ in range(fetch_size - 1):
-                    next(self._resultSetStatus)
+                    next(self._result_set_status)
             except StopIteration:
                 pass
 
-            myresults = self._resultSet[index : index + fetch_size]
+            myresults = self._result_set[index : index + fetch_size]
             return [tuple(x) for x in myresults.to_records(index=False)]
         except StopIteration:
             logging.error(self.mf.format("Catched StopIteration in fetchmany"))
@@ -227,8 +227,8 @@ class Cursor:
         # We can't just return a dataframe to sqlalchemy,
         # it has to be a list of tuples...
         try:
-            remaining = self._resultSet[next(self._resultSetStatus) :]
-            self._resultSetStatus = iter(tuple())
+            remaining = self._result_set[next(self._result_set_status) :]
+            self._result_set_status = iter(tuple())
             return [tuple(x) for x in remaining.to_records(index=False)]
 
         except StopIteration:
@@ -237,13 +237,13 @@ class Cursor:
 
     @connected
     def get_query_metadata(self):
-        return self._resultSetMetadata
+        return self._result_set_metadata
 
     def get_default_plugin(self):
         return self.default_storage_plugin
 
     def __iter__(self):
-        return self._resultSet.iterrows()
+        return self._result_set.iterrows()
 
 
 class Connection:

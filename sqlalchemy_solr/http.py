@@ -32,7 +32,7 @@ from .message_formatter import MessageFormatter
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
 
 
-class SolrDialect_http(SolrDialect):
+class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
     # pylint: disable=abstract-method
 
     mf = MessageFormatter()
