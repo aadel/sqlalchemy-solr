@@ -165,7 +165,7 @@ class SolrCompiler(compiler.SQLCompiler):
         return super().visit_clauselist(clauselist, **kw)
 
     def visit_array(self, element, **kw):
-        return "ARRAY[%s]" % self.visit_clauselist(element, **kw)
+        return "ARRAY[%s]" % self.visit_clauselist(element, **kw)   # pylint: disable=consider-using-f-string
 
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
