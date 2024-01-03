@@ -48,9 +48,7 @@ class TestSolrTableReflection:
 
         reflected_data_types = SolrTableReflection.reflect_column_types(result_set, sql)
 
-        columns = {
-            dict(zip(reflected_data_types[0], reflected_data_types[1]))
-        }
+        columns = dict(zip(reflected_data_types[0], reflected_data_types[1]))
 
         assert isinstance(columns["CITY_s"], types.VARCHAR)
         assert isinstance(columns["PHONE_ss"], types.ARRAY)
