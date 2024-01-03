@@ -5,7 +5,7 @@ class ARRAY(types.ARRAY):
     def __init__(self, item_type):
         super().__init__(item_type)
 
-    def get_col_spec(self, **kw):
+    def get_col_spec(self):
         return f"Type({self.item_type})"
 
     def bind_processor(self, dialect):

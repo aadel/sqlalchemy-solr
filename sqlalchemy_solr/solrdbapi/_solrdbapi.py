@@ -95,7 +95,7 @@ class Cursor:
 
     @staticmethod
     def submit_query(
-        query, host, port, proto, username, password, server_path, collection, session
+        query, host, port, proto, server_path, collection, session
     ):
         local_payload = _PAYLOAD.copy()
         local_payload["stmt"] = query

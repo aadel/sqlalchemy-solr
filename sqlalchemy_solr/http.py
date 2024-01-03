@@ -52,7 +52,7 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         default.DefaultDialect.__init__(self, **kw)
         self.supported_extensions = []
 
-    def create_connect_args(self, url, **kwargs):
+    def create_connect_args(self, url):
 
         url_port = url.port or 8047
         qargs = {"host": url.host, "port": url_port}
