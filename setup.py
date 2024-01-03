@@ -9,6 +9,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import os
 import re
 import sys
@@ -16,21 +17,20 @@ import sys
 from setuptools import find_packages
 from setuptools import setup
 
-v = open(
-    os.path.join(
-        os.path.dirname(os.path.realpath(sys.argv[0])), "sqlalchemy_solr", "__init__.py"
-    )
-)
-VERSION = re.compile(r".*__version__ = \"(.*?)\"", re.S).match(v.read()).group(1)
-v.close()
+script_name = os.path.dirname(os.path.realpath(sys.argv[0]))
+init_path = os.path.join(script_name, "sqlalchemy_solr", "__init__.py")
+with open(init_path, encoding="utf-8") as f:
+    VERSION = re.compile(r".*__version__ = \"(.*?)\"", re.S).match(f.read()).group(1)
 
 readme = os.path.join(os.path.dirname(__file__), "README.md")
+with open(readme, encoding='utf-8') as f:
+    long_description = f.read()
 
 setup(
     name="sqlalchemy_solr",
     version=VERSION,
     description="Apache Solr Dialect for SQLAlchemy and Apache Superset",
-    long_description=open(readme).read(),
+    long_description=long_description,
     long_description_content_type="text/markdown",
     classifiers=[
         "Development Status :: 3 - Alpha",
