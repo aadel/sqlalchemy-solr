@@ -20,10 +20,9 @@ paramstyle = "qmark"            # pylint: disable=invalid-name
 default_storage_plugin = ""     # pylint: disable=invalid-name
 
 # Python DB API 2.0 classes
-
-
 class Cursor:
-
+    # pylint: disable=too-many-instance-attributes
+    
     mf = MessageFormatter()
 
     def __init__(
@@ -247,7 +246,8 @@ class Cursor:
 
 
 class Connection:
-
+    # pylint: disable=too-many-instance-attributes
+    
     mf = MessageFormatter()
 
     def __init__(
