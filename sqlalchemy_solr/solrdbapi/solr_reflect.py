@@ -2,7 +2,6 @@ import logging
 
 import sqlparse
 from pandas import to_datetime
-from requests import Session
 
 from sqlparse.sql import Identifier
 from sqlparse.sql import IdentifierList

@@ -1,6 +1,3 @@
-import logging
-
-from sqlalchemy import and_
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy import select
