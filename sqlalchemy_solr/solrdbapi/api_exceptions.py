@@ -39,6 +39,7 @@ class ProgrammingError(Error):
 
 class CursorClosedException(Error):
     def __init__(self, message):
+        super().__init__(message)
         self.message = message
 
     def __str__(self):
@@ -47,6 +48,7 @@ class CursorClosedException(Error):
 
 class ConnectionClosedException(Error):
     def __init__(self, message):
+        super().__init__(message)
         self.message = message
 
     def __str__(self):

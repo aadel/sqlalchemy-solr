@@ -38,6 +38,7 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
     mf = MessageFormatter()
 
     def __init__(self, **kw):
+        super().__init__(kw)
         self.proto = None
         self.host = None
         self.port = None
