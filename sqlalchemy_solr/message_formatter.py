@@ -4,4 +4,4 @@ class MessageFormatter:
     footer = "\n" + "*" * 24
 
     def format(self, *args):
-        return self.header + "\n".join(args) + self.footer
+        return self.header + "\n".join(map(str, args)) + self.footer
