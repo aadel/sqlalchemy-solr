@@ -535,7 +535,7 @@ class SolrDialect(default.DefaultDialect):
         """Solr has no support for primary keys.  Retunrs an empty list."""
         return []
 
-    def get_schema_names(self):
+    def get_schema_names(self, connection, **kw):
         return tuple(["default"])
 
     def get_view_names(self, connection, schema=None, **kw):
