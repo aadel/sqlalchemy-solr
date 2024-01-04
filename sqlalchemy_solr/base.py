@@ -169,6 +169,7 @@ class SolrCompiler(compiler.SQLCompiler):
 
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
+    # pylint: disable=too-few-public-methods
     reserved_words = compiler.RESERVED_WORDS.copy()
     reserved_words.update(
         [

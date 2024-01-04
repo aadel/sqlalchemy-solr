@@ -8,6 +8,7 @@ from sqlalchemy_solr.solrdbapi import SolrTableReflection
 
 
 class TestSolrTableReflection:
+    # pylint: disable=too-few-public-methods
     def test_solr_columns_reflection(self, settings):
         sql = """
         SELECT CITY_s, PHONE_ss FROM sales_test_

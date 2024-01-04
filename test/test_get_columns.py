@@ -4,7 +4,7 @@ from .steps import TestSteps
 
 
 class TestGetColumns:
-
+    # pylint: disable=too-few-public-methods
     COLUMNS = [
         ("ADDRESSLINE1_s", "VARCHAR"),
         ("ADDRESSLINE2_s", "VARCHAR"),
