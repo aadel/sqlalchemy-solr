@@ -129,8 +129,6 @@ class Cursor:
             self.host,
             self.port,
             self.proto,
-            self.username,
-            self.password,
             self.server_path,
             self.collection,
             self._session,
