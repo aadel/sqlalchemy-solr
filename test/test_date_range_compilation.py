@@ -9,7 +9,7 @@ from .fixtures.fixtures import SalesFixture
 
 class TestDateRangeCompilation:
     def index_data(self, settings):
-        f = SalesFixture(settings["SOLR_BASE_URL"])
+        f = SalesFixture(settings)
         f.truncate_collection()
         f.index()
 

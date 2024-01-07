@@ -295,7 +295,6 @@ class Connection:
                 self._connected = False
         except Exception:
             logging.exception(self.mf.format("Error in Connection.is_connected"))
-            print(Exception)
         return False
 
     @connected

@@ -1,6 +1,7 @@
 from numpy import nan
 from pandas import DataFrame
 from requests import Session
+from requests.auth import HTTPBasicAuth
 from sqlalchemy import types
 from sqlalchemy_solr.solrdbapi import Connection
 from sqlalchemy_solr.solrdbapi import Cursor
@@ -13,7 +14,14 @@ class TestSolrTableReflection:
         sql = """
         SELECT CITY_s, PHONE_ss FROM sales_test_
         """
+
+        if settings["SOLR_USER"]:
+            auth = HTTPBasicAuth(settings["SOLR_USER"], settings["SOLR_PASS"])
+        else:
+            auth = None
+
         session = Session()
+        session.auth = auth
 
         SolrTableReflection.connection = Connection(
             settings["HOST"],
@@ -31,8 +39,6 @@ class TestSolrTableReflection:
             settings["HOST"],
             settings["PORT"],
             settings["PROTO"],
-            settings["SOLR_USER"],
-            settings["SOLR_PASS"],
             settings["SERVER_PATH"],
             settings["SOLR_WORKER_COLLECTION_NAME"],
             session,

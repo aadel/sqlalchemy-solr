@@ -34,8 +34,7 @@ class TestSteps:
         if len(db) == 1:
             self.delete_database(session, headers, db[0]["id"])
         creation_params = {
-            "sqlalchemy_uri": "solr://solr:8983/solr/"
-            + self.settings["SOLR_WORKER_COLLECTION_NAME"],
+            "sqlalchemy_uri": self.settings["SOLR_CONNECTION_URI"],
             "database_name": "sales_test_",
         }
         db_creation_response = session.post(

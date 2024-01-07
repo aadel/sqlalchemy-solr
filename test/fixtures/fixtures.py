@@ -3,6 +3,7 @@ import os
 
 import pysolr
 
+from requests.auth import HTTPBasicAuth
 
 class SalesFixture:
 
@@ -11,12 +12,18 @@ class SalesFixture:
     FILE_NAME = "sales.jsonl"
     solr = None
 
-    def __init__(self, base_url):
-        self.base_url = base_url
+    def __init__(self, settings):
+        self.base_url = settings["SOLR_BASE_URL"]
+        if settings["SOLR_USER"]:
+            auth = HTTPBasicAuth(settings["SOLR_USER"], settings["SOLR_PASS"])
+        else:
+            auth = None
+
         self.solr = pysolr.Solr(
             self.base_url + "/" + self.COLLECTION_NAME,
             always_commit=True,
             timeout=SalesFixture.TIMEOUT,
+            auth=auth
         )
 
     def index_jsonl(self, file_path):
