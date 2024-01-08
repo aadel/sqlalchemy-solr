@@ -84,14 +84,14 @@ class SolrCompiler(compiler.SQLCompiler):
 
         try:
             if isinstance(binary.right, BindParameter):
-                datetime = parser.parse(binary.right.effective_value)
+                dt = parser.parse(self.unescape_colon(binary.right.effective_value))
             else:
-                datetime = parser.parse(binary.right.text)
+                dt = parser.parse(self.unescape_colon(binary.right.text))
         except (ValueError, TypeError):
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)
         else:
             if binary.operator in (operators.ge, operators.gt):
-                ldatetime = datetime
+                ldatetime = dt
                 lbound = self.bounds[binary.operator]
                 if str(binary.left) in kw:
                     if kw[str(binary.left)].keys() & [operators.le, operators.lt]:
@@ -103,17 +103,17 @@ class SolrCompiler(compiler.SQLCompiler):
                         if isinstance(
                             kw[str(binary.left)][uoperator].right.text, BindParameter
                         ):
-                            udatetime = parser.parse(
+                            udatetime = parser.parse(self.unescape_colon(
                                 kw[str(binary.left)][uoperator].right.effective_value
-                            )
+                            ))
                         else:
-                            udatetime = parser.parse(
+                            udatetime = parser.parse(self.unescape_colon(
                                 kw[str(binary.left)][uoperator].right.text
-                            )
+                            ))
                     else:
                         ubound, udatetime = "]", "*"
             else:
-                udatetime = datetime
+                udatetime = dt
                 ubound = self.bounds[binary.operator]
                 if str(binary.left) in kw:
                     if kw[str(binary.left)].keys() & [operators.ge, operators.gt]:
@@ -125,23 +125,22 @@ class SolrCompiler(compiler.SQLCompiler):
                         if isinstance(
                             kw[str(binary.left)][loperator].right, BindParameter
                         ):
-                            ldatetime = parser.parse(
+                            ldatetime = parser.parse(self.unescape_colon(
                                 kw[str(binary.left)][loperator].right.effective_value
-                            )
+                            ))
                         else:
-                            ldatetime = parser.parse(
+                            ldatetime = parser.parse(self.unescape_colon(
                                 kw[str(binary.left)][loperator].right.text
-                            )
+                            ))
                     else:
                         lbound, ldatetime = "[", "*"
 
             binary.right = expression.TextClause(
                 "'"
                 + lbound
-                + ldatetime.isoformat()
-                + "Z TO "
-                + udatetime.isoformat()
-                + "Z"
+                + self.datetime_str(ldatetime)
+                + " TO "
+                + self.datetime_str(udatetime)
                 + ubound
                 + "'"
             )
@@ -167,6 +166,15 @@ class SolrCompiler(compiler.SQLCompiler):
     def visit_array(self, element, **kw):
         return "ARRAY[%s]" % self.visit_clauselist(element, **kw)   # pylint: disable=consider-using-f-string
 
+    def unescape_colon(self, s: str) -> str:
+        """Unescape colon if present in datetime value"""
+        return s.replace(r'\:', ':')
+
+    def datetime_str(self, dt) -> str:
+        if dt == "*":
+            return dt
+        else:
+            return dt.isoformat() + "Z"
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     # pylint: disable=too-few-public-methods
