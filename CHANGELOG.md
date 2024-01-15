@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.2.3 (2024-01-15)
+
+### Features
+
+* Adding JWT authentication support [[#15](https://github.com/aadel/sqlalchemy-solr/pull/15)]
+* Introducing `verify_ssl` parameter
+
+### Fixed
+
+* Filtering out schema from `FROM` clause
+
 ## 0.2.2.1 (2021-05-21)
 
 ### Fixed
