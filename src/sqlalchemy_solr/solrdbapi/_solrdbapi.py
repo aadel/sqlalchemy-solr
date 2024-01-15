@@ -4,9 +4,10 @@ import re
 from numpy import nan
 from pandas import DataFrame
 from requests import Session
-from sqlalchemy_solr.api_globals import _HEADER
-from sqlalchemy_solr.api_globals import _PAYLOAD
-from sqlalchemy_solr.message_formatter import MessageFormatter
+
+from ..api_globals import _HEADER
+from ..api_globals import _PAYLOAD
+from ..message_formatter import MessageFormatter
 
 from .api_exceptions import ConnectionClosedException
 from .api_exceptions import CursorClosedException

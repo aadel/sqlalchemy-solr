@@ -23,8 +23,9 @@ import logging
 
 from requests import Session
 from sqlalchemy.engine import default
-from sqlalchemy_solr.api_globals import _HEADER
-from sqlalchemy_solr.api_globals import _PAYLOAD
+
+from .api_globals import _HEADER
+from .api_globals import _PAYLOAD
 
 from .base import SolrDialect
 from .message_formatter import MessageFormatter

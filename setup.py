@@ -11,52 +11,17 @@
 # limitations under the License.
 
 import os
-import re
-import sys
 
-from setuptools import find_packages
 from setuptools import setup
-
-script_name = os.path.dirname(os.path.realpath(sys.argv[0]))
-init_path = os.path.join(script_name, "sqlalchemy_solr", "__init__.py")
-with open(init_path, encoding="utf-8") as f:
-    VERSION = re.compile(r".*__version__ = \"(.*?)\"", re.S).match(f.read()).group(1)
 
 readme = os.path.join(os.path.dirname(__file__), "README.md")
 with open(readme, encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name="sqlalchemy_solr",
-    version=VERSION,
-    description="Apache Solr Dialect for SQLAlchemy and Apache Superset",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    classifiers=[
-        "Development Status :: 3 - Alpha",
-        "Environment :: Console",
-        "Intended Audience :: Developers",
-        "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: Implementation :: CPython",
-        "Topic :: Database :: Front-Ends",
-    ],
-    install_requires=["requests", "numpy", "pandas", "sqlalchemy", "sqlparse"],
     tests_require=["pysolr", "pytest >= 6.2.1"],
-    keywords="Apache Solr Superset SQLAlchemy dialect",
-    author="Ahmed Adel",
-    author_email="hello@aadel.io",
-    url="https://github.com/aadel/sqlalchemy-solr",
-    license="MIT",
-    packages=find_packages(),
-    include_package_data=True,
     test_suite="nose.collector",
-    zip_safe=False,
-    entry_points={
-        "sqlalchemy.dialects": [
-            "solr = sqlalchemy_solr.http:SolrDialect_http",
-            "solr.http = sqlalchemy_solr.http:SolrDialect_http",
-        ]
-    },
+    zip_safe=False
 )

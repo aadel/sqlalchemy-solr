@@ -30,8 +30,9 @@ from sqlalchemy.sql import compiler
 from sqlalchemy.sql import expression
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.expression import BindParameter
-from sqlalchemy_solr.solr_type_compiler import SolrTypeCompiler
-from sqlalchemy_solr.solrdbapi.array import ARRAY
+
+from .solr_type_compiler import SolrTypeCompiler
+from .solrdbapi.array import ARRAY
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
 
@@ -523,7 +524,7 @@ class SolrDialect(default.DefaultDialect):
 
     @classmethod
     def dbapi(cls):
-        import sqlalchemy_solr.solrdbapi as module
+        from . import solrdbapi as module
 
         return module
 
