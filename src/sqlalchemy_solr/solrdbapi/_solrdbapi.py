@@ -86,7 +86,7 @@ class Cursor:
         query = string_query
         try:
             for param in parameters:
-                if type(param) == str:
+                if isinstance(param, str):
                     query = query.replace("?", f"'{param}'", 1)
                 else:
                     query = query.replace("?", str(param), 1)
