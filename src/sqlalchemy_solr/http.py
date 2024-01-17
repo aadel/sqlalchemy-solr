@@ -52,6 +52,8 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         default.DefaultDialect.__init__(self, **kw)
         self.supported_extensions = []
 
+        self.aliases = []
+
     def create_connect_args(self, url):
 
         url_port = url.port or 8047
@@ -116,51 +118,30 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         return [], qargs
 
     def get_table_names(self, connection, schema=None, **kw):
-        session = self.session
-
         local_payload = _PAYLOAD.copy()
-        local_payload["action"] = "LIST"
-        try:
-            result = session.get(
-                self.proto
-                + self.host
-                + ":"
-                + str(self.port)
-                + "/"
-                + self.server_path
-                + "/admin/collections",
-                params=local_payload,
-                headers=_HEADER,
-            )
-            tables_names = result.json()["collections"]
-
-            return tuple(tables_names)
-
-        except Exception:
-            logging.exception("Error in SolrDialect_http.get_table_names")
-            return None
+        self._get_aliases(local_payload)
+        aliases_tuple = tuple(a for a in self.aliases)
+        return self._get_collections(local_payload) + aliases_tuple
 
     def get_columns(self, connection, table_name, schema=None, **kw):
-        columns = []
-
-        session = self.session
-
         local_payload = _PAYLOAD.copy()
+
+        if "columns" in kw:
+            columns = kw['columns']
+        else:
+            columns = []
+            self._get_aliases(local_payload)
+
+        if table_name in self.aliases:
+            for collection in self.aliases[table_name].split(','):
+                self.get_columns(None, collection, columns=columns)
+            
+            return self.get_unique_columns(columns)
+
         local_payload["action"] = "LIST"
         try:
-            result = session.get(
-                self.proto
-                + self.host
-                + ":"
-                + str(self.port)
-                + "/"
-                + self.server_path
-                + "/"
-                + table_name
-                + "/admin/luke",
-                params=local_payload,
-                headers=_HEADER,
-            )
+            result = self._session_get(local_payload, f"/{table_name}/admin/luke")
+
             fields = result.json()["fields"]
             for field in fields:
                 column = {
@@ -169,7 +150,56 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
                     "longType": self.get_data_type(fields[field]["type"]),
                 }
                 columns.append(column)
-            return columns
+            
+            return self.get_unique_columns(columns)
         except Exception:
             logging.exception("Error in SolrDialect_http.get_table_names")
             return None
+
+    def _get_collections(self, local_payload):
+        local_payload["action"] = "LIST"
+        try:
+            result = self._session_get(local_payload, "/admin/collections")
+            collections_names = result.json()["collections"]
+            return tuple(collections_names)
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logging.exception(e)
+            return tuple()
+
+    def _get_aliases(self, local_payload):
+        local_payload["action"] = "LISTALIASES"
+        try:
+            result = self._session_get(local_payload, "/admin/collections")
+            self.aliases = result.json()["aliases"]
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logging.exception(e)
+
+        return None
+
+    def _session_get(self, payload, path: str):
+        try:
+            response = self.session.get(
+                self.proto
+                + self.host
+                + ":"
+                + str(self.port)
+                + "/"
+                + self.server_path
+                + path,
+                params=payload,
+                headers=_HEADER,
+            )
+            return response
+
+        except Exception as e:
+            raise e
+
+    def get_unique_columns(self, columns):
+        unique_columns = []
+        columns_set = {column['name'] for column in columns}
+        for c in columns:
+            if c['name'] in columns_set:
+                unique_columns.append(c)
+                columns_set.remove(c['name'])
+        
+        return unique_columns
