@@ -31,29 +31,11 @@ from sqlalchemy.sql import expression
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.expression import BindParameter
 
+from .types import _type_map
+
 from .solr_type_compiler import SolrTypeCompiler
-from .solrdbapi.array import ARRAY
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
-
-_type_map = {
-    "binary": types.LargeBinary(),
-    "boolean": types.Boolean(),
-    "pdate": types.DateTime(),
-    "pint": types.Integer(),
-    "plong": types.BigInteger(),
-    "pfloat": types.Float(),
-    "pdouble": types.REAL(),
-    "string": types.VARCHAR(),
-    "text_general": types.Text(),
-    "booleans": ARRAY(types.BOOLEAN()),
-    "pints": ARRAY(types.Integer()),
-    "plongs": ARRAY(types.BigInteger()),
-    "pfloats": ARRAY(types.Float()),
-    "pdoubles": ARRAY(types.REAL()),
-    "strings": ARRAY(types.VARCHAR()),
-}
-
 
 class SolrCompiler(compiler.SQLCompiler):
     # pylint: disable=abstract-method
@@ -146,7 +128,7 @@ class SolrCompiler(compiler.SQLCompiler):
             + "'"
         )
         binary.operator = operators.eq
-        
+
         return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
     def visit_clauselist(self, clauselist, **kw):
@@ -175,7 +157,7 @@ class SolrCompiler(compiler.SQLCompiler):
     def datetime_str(self, dt) -> str:
         if dt == "*":
             return dt
-        
+
         return dt.isoformat() + "Z"
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
