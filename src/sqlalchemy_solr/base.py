@@ -90,63 +90,64 @@ class SolrCompiler(compiler.SQLCompiler):
                 dt = parser.parse(self.unescape_colon(binary.right.text))
         except (ValueError, TypeError):
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)
-        else:
-            if binary.operator in (operators.ge, operators.gt):
-                ldatetime = dt
-                lbound = self.bounds[binary.operator]
-                if str(binary.left) in kw:
-                    if kw[str(binary.left)].keys() & [operators.le, operators.lt]:
-                        ubound, uoperator = (
-                            ("]", operators.le)
-                            if operators.le in kw[str(binary.left)]
-                            else ("}", operators.lt)
-                        )
-                        if isinstance(
-                            kw[str(binary.left)][uoperator].right.text, BindParameter
-                        ):
-                            udatetime = parser.parse(self.unescape_colon(
-                                kw[str(binary.left)][uoperator].right.effective_value
-                            ))
-                        else:
-                            udatetime = parser.parse(self.unescape_colon(
-                                kw[str(binary.left)][uoperator].right.text
-                            ))
-                    else:
-                        ubound, udatetime = "]", "*"
-            else:
-                udatetime = dt
-                ubound = self.bounds[binary.operator]
-                if str(binary.left) in kw:
-                    if kw[str(binary.left)].keys() & [operators.ge, operators.gt]:
-                        lbound, loperator = (
-                            ("[", operators.ge)
-                            if operators.ge in kw[str(binary.left)]
-                            else ("{", operators.gt)
-                        )
-                        if isinstance(
-                            kw[str(binary.left)][loperator].right, BindParameter
-                        ):
-                            ldatetime = parser.parse(self.unescape_colon(
-                                kw[str(binary.left)][loperator].right.effective_value
-                            ))
-                        else:
-                            ldatetime = parser.parse(self.unescape_colon(
-                                kw[str(binary.left)][loperator].right.text
-                            ))
-                    else:
-                        lbound, ldatetime = "[", "*"
 
-            binary.right = expression.TextClause(
-                "'"
-                + lbound
-                + self.datetime_str(ldatetime)
-                + " TO "
-                + self.datetime_str(udatetime)
-                + ubound
-                + "'"
-            )
-            binary.operator = operators.eq
-            return super().visit_binary(binary, override_operator, eager_grouping, **kw)
+        if binary.operator in (operators.ge, operators.gt):
+            ldatetime = dt
+            lbound = self.bounds[binary.operator]
+            if str(binary.left) in kw:
+                if kw[str(binary.left)].keys() & [operators.le, operators.lt]:
+                    ubound, uoperator = (
+                        ("]", operators.le)
+                        if operators.le in kw[str(binary.left)]
+                        else ("}", operators.lt)
+                    )
+                    if isinstance(
+                        kw[str(binary.left)][uoperator].right.text, BindParameter
+                    ):
+                        udatetime = parser.parse(self.unescape_colon(
+                            kw[str(binary.left)][uoperator].right.effective_value
+                        ))
+                    else:
+                        udatetime = parser.parse(self.unescape_colon(
+                            kw[str(binary.left)][uoperator].right.text
+                        ))
+                else:
+                    ubound, udatetime = "]", "*"
+        else:
+            udatetime = dt
+            ubound = self.bounds[binary.operator]
+            if str(binary.left) in kw:
+                if kw[str(binary.left)].keys() & [operators.ge, operators.gt]:
+                    lbound, loperator = (
+                        ("[", operators.ge)
+                        if operators.ge in kw[str(binary.left)]
+                        else ("{", operators.gt)
+                    )
+                    if isinstance(
+                        kw[str(binary.left)][loperator].right, BindParameter
+                    ):
+                        ldatetime = parser.parse(self.unescape_colon(
+                            kw[str(binary.left)][loperator].right.effective_value
+                        ))
+                    else:
+                        ldatetime = parser.parse(self.unescape_colon(
+                            kw[str(binary.left)][loperator].right.text
+                        ))
+                else:
+                    lbound, ldatetime = "[", "*"
+
+        binary.right = expression.TextClause(
+            "'"
+            + lbound
+            + self.datetime_str(ldatetime)
+            + " TO "
+            + self.datetime_str(udatetime)
+            + ubound
+            + "'"
+        )
+        binary.operator = operators.eq
+        
+        return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
     def visit_clauselist(self, clauselist, **kw):
         if clauselist.operator == operators.and_:
@@ -174,8 +175,8 @@ class SolrCompiler(compiler.SQLCompiler):
     def datetime_str(self, dt) -> str:
         if dt == "*":
             return dt
-        else:
-            return dt.isoformat() + "Z"
+        
+        return dt.isoformat() + "Z"
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     # pylint: disable=too-few-public-methods
