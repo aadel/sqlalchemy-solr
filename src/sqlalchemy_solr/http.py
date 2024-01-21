@@ -135,7 +135,7 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         if table_name in self.aliases:
             for collection in self.aliases[table_name].split(','):
                 self.get_columns(None, collection, columns=columns)
-            
+
             return self.get_unique_columns(columns)
 
         local_payload["action"] = "LIST"
@@ -150,7 +150,7 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
                     "longType": self.get_data_type(fields[field]["type"]),
                 }
                 columns.append(column)
-            
+
             return self.get_unique_columns(columns)
         except Exception:
             logging.exception("Error in SolrDialect_http.get_table_names")
@@ -173,8 +173,6 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
             self.aliases = result.json()["aliases"]
         except Exception as e:  # pylint: disable=broad-exception-caught
             logging.exception(e)
-
-        return None
 
     def _session_get(self, payload, path: str):
         try:
@@ -201,5 +199,5 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
             if c['name'] in columns_set:
                 unique_columns.append(c)
                 columns_set.remove(c['name'])
-        
+
         return unique_columns
