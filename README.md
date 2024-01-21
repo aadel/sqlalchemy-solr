@@ -43,6 +43,16 @@ If HTTPS is enable, the following parameters can be supplied:
 1. `use_ssl`: a boolean parameter when set to `true` an HTTPS connection is used. Default value is `false`.
 2. `verify_ssl`: a boolean parameter that controls whether to verify SSL certificate. Default value is `true`.
 
+### Aliases
+
+Aliases are supported as tables where columns are the union of all the undetlaying collections fields. For example, if an alias `foo` has linked collection members, the following query is valid:
+
+```
+    SELECT f1, f2, f3 FROM foo
+```
+
+where `f1`, `f2`, and `f3` are defined in the linked collections.
+
 ## Basic Example
 
 The following example illustrates the basic usage in a Python project:
