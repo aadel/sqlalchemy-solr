@@ -1,4 +1,4 @@
-from requests import Session
+from tests.setup import create_database
 
 from .steps import TestSteps
 
@@ -7,12 +7,7 @@ class TestDatasetCreation:
     # pylint: disable=too-few-public-methods
     def test_db_creation(self, settings):
         test_steps = TestSteps(settings)
-        session = Session()
-        headers = test_steps.login(session)
-        test_steps.create_database(session, headers)
-        db_response = test_steps.get_database(
-            session, headers, settings["SUPERSET_DATABASE_NAME"]
-        )
+        session, headers, db_response = create_database(settings)
         database_id = db_response[0]["id"]
         dataset_creation_response = test_steps.create_dataset(
             session, headers, database_id

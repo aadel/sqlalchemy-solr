@@ -19,7 +19,7 @@
 # OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 # DEALINGS IN THE SOFTWARE.
 
-__version__ = "0.2.3.0"
+__version__ = "0.2.4.0.dev30"
 from sqlalchemy.dialects import registry
 
 registry.register("solr", "sqlalchemy_solr.http", "SolrDialect_http")

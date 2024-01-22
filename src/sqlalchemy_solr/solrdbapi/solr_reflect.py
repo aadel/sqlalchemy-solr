@@ -7,7 +7,7 @@ from sqlparse.sql import Identifier
 from sqlparse.sql import IdentifierList
 from sqlparse.tokens import Keyword
 
-from .. import types
+from .. import type_map
 from ..api_globals import _HEADER
 from ..message_formatter import MessageFormatter
 
@@ -54,7 +54,7 @@ class SolrTableReflection:
                 prototype = None
                 for table in tables:
                     if column in SolrTableReflection.table_metadata_cache[table]:
-                        prototype = types._type_map[
+                        prototype = type_map._type_map[
                             SolrTableReflection.table_metadata_cache[table][column][
                                 "type"
                             ]

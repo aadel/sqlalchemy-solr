@@ -1,33 +1,12 @@
 from sqlalchemy import and_
-from sqlalchemy import create_engine
-from sqlalchemy import MetaData
 from sqlalchemy import select
-from sqlalchemy import Table
 
-from .fixtures.fixtures import SalesFixture
-
+from tests.setup import prepare_orm
 
 class TestDateRangeCompilation:
-    def index_data(self, settings):
-        f = SalesFixture(settings)
-        f.truncate_collection()
-        f.index()
 
     def test_solr_date_range_compilation(self, settings):
-        self.index_data(settings)
-        metadata = MetaData()
-        engine = create_engine(
-            settings["SOLR_CONNECTION_URI"]
-            + "/"
-            + settings["SOLR_WORKER_COLLECTION_NAME"],
-            echo=True,
-        )
-        t = Table(
-            settings["SOLR_WORKER_COLLECTION_NAME"],
-            metadata,
-            autoload=True,
-            autoload_with=engine,
-        )
+        engine, t = prepare_orm(settings)
 
         lower_bound = "2017-05-10 00:00:00"
         upper_bound = "2017-05-20 00:00:00"

@@ -31,7 +31,7 @@ from sqlalchemy.sql import expression
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.expression import BindParameter
 
-from .types import _type_map
+from .type_map import _type_map
 
 from .solr_type_compiler import SolrTypeCompiler
 

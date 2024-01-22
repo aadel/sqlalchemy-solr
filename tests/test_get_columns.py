@@ -1,4 +1,4 @@
-from requests import Session
+from tests.setup import create_database
 
 from .steps import TestSteps
 
@@ -40,12 +40,7 @@ class TestGetColumns:
 
     def test_get_columns(self, settings):
         test_steps = TestSteps(settings)
-        session = Session()
-        headers = test_steps.login(session)
-        test_steps.create_database(session, headers)
-        db_response = test_steps.get_database(
-            session, headers, settings["SUPERSET_DATABASE_NAME"]
-        )
+        session, headers, db_response = create_database(settings)
         test_steps.create_dataset(session, headers, db_response[0]["id"])
         datasets_response = session.get(
             settings["SUPERSET_URI"] + "/api/v1/dataset", headers=headers
