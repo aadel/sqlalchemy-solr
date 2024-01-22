@@ -72,7 +72,7 @@ with engine.connect() as connection:
 
 * A Solr instance with a Parallel SQL supported up and running
 * A Superset instance up and running with this package installed
-* `pytest` >= 6.2.1 installed on the testing machine
+* `pytest` >= 7.4.4 installed on the testing machine
 
 #### Procedure
 
