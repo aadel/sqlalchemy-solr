@@ -12,19 +12,7 @@ class TestFilteringOutSchema:
     def test_solr_filtering_out_schema(self, settings):
         engine, t = prepare_orm(settings)
 
-        select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM `default`.sales_test_\n LIMIT ?"
-        select_statement_2 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
-
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
-            100
-        )  # pylint: disable=unsubscriptable-object
-
-        result = engine.execute(qry)
-
-        assert (
-            result.context.statement
-            == select_statement_2
-        )
+        t.schema = 'default'
 
         select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
 
@@ -36,31 +24,5 @@ class TestFilteringOutSchema:
 
         assert (
             result.context.statement
-            == select_statement_2
-        )
-
-        select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM default.sales_test_ \nWHERE TRUE"
-
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
-            100
-        )  # pylint: disable=unsubscriptable-object
-
-        result = engine.execute(qry)
-
-        assert (
-            result.context.statement
-            == select_statement_2
-        )
-
-        select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM \"public\".sales_test_ \nWHERE TRUE"
-
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
-            100
-        )  # pylint: disable=unsubscriptable-object
-
-        result = engine.execute(qry)
-
-        assert (
-            result.context.statement
-            == select_statement_2
+            == select_statement_1
         )
