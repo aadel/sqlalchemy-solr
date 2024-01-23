@@ -74,13 +74,6 @@ class Cursor:
 
         return func_wrapper
 
-    # Solr has no schema concept
-    @staticmethod
-    def filter_out_schema(string_query: str) -> str:
-        table_query = re.sub(r'(?i)(FROM) [`"]?.+[`"]?\.', r'\1 ', string_query)
-        logging.info(Cursor.mf.format(table_query))
-        return table_query
-
     @staticmethod
     def substitute_in_query(string_query, parameters):
         query = string_query
@@ -124,7 +117,6 @@ class Cursor:
 
     @connected
     def execute(self, operation, parameters=()):
-        operation = Cursor.filter_out_schema(operation)
         result = self.submit_query(
             self.substitute_in_query(operation, parameters),
             self.host,
