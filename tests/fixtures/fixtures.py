@@ -33,7 +33,7 @@ class SalesFixture:
         # make sure Solr is up and running
         self.solr.ping()
 
-        with open(file_path) as f:
+        with open(file_path, encoding="utf-8") as f:
             jsonl_content = f.readlines()
             data = [json.loads(line) for line in jsonl_content]
 
