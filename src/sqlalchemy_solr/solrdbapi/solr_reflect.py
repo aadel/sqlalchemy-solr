@@ -54,7 +54,7 @@ class SolrTableReflection:
                 prototype = None
                 for table in tables:
                     if column in SolrTableReflection.table_metadata_cache[table]:
-                        prototype = type_map._type_map[
+                        prototype = type_map.type_map[
                             SolrTableReflection.table_metadata_cache[table][column][
                                 "type"
                             ]

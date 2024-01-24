@@ -31,7 +31,7 @@ from sqlalchemy.sql import expression
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.expression import BindParameter
 
-from .type_map import _type_map
+from .type_map import type_map
 
 from .solr_type_compiler import SolrTypeCompiler
 
@@ -558,7 +558,7 @@ class SolrDialect(default.DefaultDialect):
 
     def get_data_type(self, data_type):
         try:
-            dt = _type_map[data_type]
+            dt = type_map[data_type]
         except Exception:
             dt = types.UserDefinedType
         return dt
