@@ -1,8 +1,8 @@
-from sqlalchemy_solr.solrdbapi.array import ARRAY
-
 from sqlalchemy import types
 
-_type_map = {
+from sqlalchemy_solr.solrdbapi.array import ARRAY
+
+type_map = {
     "binary": types.LargeBinary(),
     "boolean": types.Boolean(),
     "pdate": types.DateTime(),
