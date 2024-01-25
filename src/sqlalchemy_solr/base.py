@@ -559,6 +559,6 @@ class SolrDialect(default.DefaultDialect):
     def get_data_type(self, data_type):
         try:
             dt = type_map[data_type]
-        except Exception:
+        except KeyError:
             dt = types.UserDefinedType
         return dt
