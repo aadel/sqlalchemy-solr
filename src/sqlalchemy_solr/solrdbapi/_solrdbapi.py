@@ -192,6 +192,21 @@ class Cursor:
 
     @connected
     def fetchmany(self, size=None):
+        """Fetches the next set of rows of a query result, returning a list of tuples.
+        An empty list is returned when no more rows are available.
+
+        Args:
+            size (int): The size of the result subset to return. Default is 1.
+
+        Returns:
+            list(tuple): The result subset.
+
+        An UninitializedResultSetError exception is raised if the previous call to
+        .execute*() did not produce any result set or no call was issued yet.
+        """
+
+        if self._result_set is None:
+            raise UninitializedResultSetError("Resultset not initialized")
 
         if size is None:
             fetch_size = self.arraysize
@@ -206,11 +221,11 @@ class Cursor:
             except StopIteration:
                 pass
 
-            myresults = self._result_set[index : index + fetch_size]
-            return [tuple(x) for x in myresults.to_records(index=False)]
-        except StopIteration as e:
-            logging.error(e)
-            return None
+            # pylint: disable=unsubscriptable-object
+            result_subset = self._result_set[index : index + fetch_size]
+            return [tuple(x) for x in result_subset.to_records(index=False)]
+        except StopIteration:
+            return []
 
     @connected
     def fetchall(self):
