@@ -1,60 +1,46 @@
 class Error(Exception):  # noqa: B903
-    def __init__(self, message, httperror):
+    def __init__(self, message):
         self.message = message
-        self.httperror = httperror
 
-
-class AuthError(Error):
     def __str__(self):
-        return repr(
-            "{msg} {type} {err}".format( # pylint: disable=consider-using-f-string
-                msg=self.message,
-                type="Authentication Error: Invalid User/Pass:",
-                err=self.httperror,
-            )
-        )
-
+        return repr(f"{self.message}")
 
 class DatabaseError(Error):
-    def __str__(self):
-        return repr(
-            "{msg} {type} {err}".format( # pylint: disable=consider-using-f-string
-                msg=self.message,
-                type="HTTP ERROR:",
-                err=self.httperror,
-            )
-        )
+    pass
 
+class DataError(DatabaseError):
+    pass
 
-class ProgrammingError(Error):
-    def __str__(self):
-        return repr(
-            "{msg} {type} {err}".format( # pylint: disable=consider-using-f-string
-                msg=self.message,
-                type="HTTP ERROR:",
-                err=self.httperror,
-            )
-        )
+class DatabaseHTTPError(DatabaseError):
+    def __init__(self, message, http_error):
+        super().__init__(message)
 
-
-class CursorClosedException(Error):
-    def __init__(self, message):
-        self.message = message
+        self.http_error = http_error
 
     def __str__(self):
-        return repr(self.message)
+        return repr(f"HTTP Error {self.http_error} {self.message}"
+    )
 
+class IntegrityError(DatabaseError):
+    pass
 
-class ConnectionClosedException(Error):
-    def __init__(self, message):
-        self.message = message
+class InternalError(DatabaseError):
+    pass
 
-    def __str__(self):
-        return repr(self.message)
+class OperationalError(DatabaseError):
+    pass
 
-class UninitializedResultSetError(Error):
-    def __init__(self, message):
-        self.message = message
+class AuthenticationError(OperationalError):
+    pass
 
-    def __str__(self):
-        return repr(self.message)
+class ProgrammingError(DatabaseError):
+    pass
+
+class CursorClosedException(InternalError):
+    pass
+
+class ConnectionClosedException(InternalError):
+    pass
+
+class UninitializedResultSetError(ProgrammingError):
+    pass

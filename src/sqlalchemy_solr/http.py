@@ -21,8 +21,10 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from requests import Session
+from requests import RequestException, Session
 from sqlalchemy.engine import default
+
+from sqlalchemy_solr.solrdbapi.api_exceptions import DatabaseError
 
 from .api_globals import _HEADER
 from .api_globals import _PAYLOAD
@@ -59,62 +61,57 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         url_port = url.port or 8047
         qargs = {"host": url.host, "port": url_port}
 
-        try:
-            db_parts = url.database.split("/")
-            db = ".".join(db_parts)
+        db_parts = url.database.split("/")
+        db = ".".join(db_parts)
 
-            self.proto = "http://"
-            if "use_ssl" in url.query:
-                if url.query["use_ssl"] in [True, "True", "true"]:
-                    self.proto = "https://"
+        self.proto = "http://"
+        if "use_ssl" in url.query:
+            if url.query["use_ssl"] in [True, "True", "true"]:
+                self.proto = "https://"
 
-            if "token" in url.query:
-                if url.query["token"] is not None :
-                    self.token = url.query["token"]
+        if "token" in url.query:
+            if url.query["token"] is not None :
+                self.token = url.query["token"]
 
-            # Mapping server path and collection
-            if db_parts[0]:
-                server_path = db_parts[0]
-            else:
-                raise AttributeError("Missing server path")
-            if db_parts[1]:
-                collection = db_parts[1]
-            else:
-                raise AttributeError("Missing collection")
+        # Mapping server path and collection
+        if db_parts[0]:
+            server_path = db_parts[0]
+        else:
+            raise AttributeError("Missing server path")
+        if db_parts[1]:
+            collection = db_parts[1]
+        else:
+            raise AttributeError("Missing collection")
 
-            # Save this for later use.
-            self.host = url.host
-            self.port = url_port
-            self.username = url.username
-            self.password = url.password
-            self.db = db
-            self.server_path = server_path
-            self.collection = collection
+        # Save this for later use.
+        self.host = url.host
+        self.port = url_port
+        self.username = url.username
+        self.password = url.password
+        self.db = db
+        self.server_path = server_path
+        self.collection = collection
 
-            # Prepare a session with proper authorization handling.
-            session = Session()
-            #session.verify property which is bydefault true so Handled here
-            if "verify_ssl" in url.query and url.query["verify_ssl"] in [False, "False", "false"]:
-                session.verify = False
+        # Prepare a session with proper authorization handling.
+        session = Session()
+        # session.verify property which is bydefault true so Handled here
+        if "verify_ssl" in url.query and url.query["verify_ssl"] in [False, "False", "false"]:
+            session.verify = False
 
-            if self.token is not None:
-                session.headers.update({'Authorization': f'Bearer {self.token}'})
-            else:
-                session.auth = (self.username, self.password)
-            # Utilize this session in other methods.
-            self.session = session
+        if self.token is not None:
+            session.headers.update({'Authorization': f'Bearer {self.token}'})
+        else:
+            session.auth = (self.username, self.password)
+        # Utilize this session in other methods.
+        self.session = session
 
-            qargs.update(url.query)
-            qargs["db"] = db
-            qargs["server_path"] = server_path
-            qargs["collection"] = collection
-            qargs["username"] = url.username
-            qargs["password"] = url.password
+        qargs.update(url.query)
+        qargs["db"] = db
+        qargs["server_path"] = server_path
+        qargs["collection"] = collection
+        qargs["username"] = url.username
+        qargs["password"] = url.password
 
-        except Exception:
-            logging.exception(
-                self.mf.format("Error in SolrDialect_http.create_connect_args")
-            )
         return [], qargs
 
     def get_table_names(self, connection, schema=None, **kw):
@@ -152,9 +149,10 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
                 columns.append(column)
 
             return self.get_unique_columns(columns)
-        except Exception:
-            logging.exception("Error in SolrDialect_http.get_table_names")
-            return None
+        except RequestException as e:
+            raise DatabaseError(e.response.text) from e
+        except (KeyError, TypeError) as e:
+            raise e
 
     def _get_collections(self, local_payload):
         local_payload["action"] = "LIST"
@@ -162,7 +160,7 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
             result = self._session_get(local_payload, "/admin/collections")
             collections_names = result.json()["collections"]
             return tuple(collections_names)
-        except Exception as e:  # pylint: disable=broad-exception-caught
+        except (RequestException, KeyError, TypeError) as e:
             logging.exception(e)
             return tuple()
 
@@ -171,7 +169,7 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         try:
             result = self._session_get(local_payload, "/admin/collections")
             self.aliases = result.json()["aliases"]
-        except Exception as e:  # pylint: disable=broad-exception-caught
+        except (RequestException, KeyError, TypeError) as e:
             logging.exception(e)
 
     def _session_get(self, payload, path: str):
@@ -189,8 +187,8 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
             )
             return response
 
-        except Exception as e:
-            raise e
+        except RequestException as e:
+            raise DatabaseError(e.response.text) from e
 
     def get_unique_columns(self, columns):
         unique_columns = []

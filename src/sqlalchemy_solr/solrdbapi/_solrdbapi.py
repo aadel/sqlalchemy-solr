@@ -8,9 +8,9 @@ from ..api_globals import _HEADER
 from ..api_globals import _PAYLOAD
 from ..message_formatter import MessageFormatter
 
-from .api_exceptions import ConnectionClosedException, UninitializedResultSetError
+from .api_exceptions import ConnectionClosedException, DatabaseHTTPError
+from .api_exceptions import UninitializedResultSetError
 from .api_exceptions import CursorClosedException
-from .api_exceptions import DatabaseError
 from .api_exceptions import ProgrammingError
 from .solr_reflect import SolrTableReflection
 
@@ -63,10 +63,8 @@ class Cursor:
     def connected(func):  # pylint: disable=no-self-argument # noqa: B902
         def func_wrapper(self, *args, **kwargs):
             if self._connected is False:
-                logging.error(self.mf.format("Error in Cursor.func_wrapper"))
                 raise CursorClosedException("Cursor object is closed")
             if self.connection._connected is False:
-                logging.error(self.mf.format("Error in Cursor.func_wrapper"))
                 raise ConnectionClosedException("Connection object is closed")
 
             return func(self, *args, **kwargs)  # pylint: disable=not-callable
@@ -130,9 +128,7 @@ class Cursor:
 
         if result.status_code != 200:
             logging.error(self.mf.format("Error in Cursor.execute"))
-            raise ProgrammingError(
-                result.json().get("errorMessage", "ERROR"), result.status_code
-            )
+            raise ProgrammingError(result.text)
 
         rows = result.json()["result-set"]["docs"]
         if "EXCEPTION" in rows[0]:
@@ -345,7 +341,6 @@ def connect(
 ):
 
     session = Session()
-    mf = MessageFormatter()
     # bydefault session.verify is set to True
     if verify_ssl is not None and verify_ssl in [False,"False","false"]:
         session.verify = False
@@ -365,11 +360,7 @@ def connect(
         )
 
         if response.status_code != 200:
-            logging.error(mf.format("Error in connect"))
-            logging.error(mf.format("Response code:", response.status_code))
-            raise DatabaseError(
-                str(response.json()["errorMessage"]), response.status_code
-            )
+            raise DatabaseHTTPError(response.text, response.status_code)
 
     return Connection(
         host, db, username, password, server_path, collection, port, proto, session
