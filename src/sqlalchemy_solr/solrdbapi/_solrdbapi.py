@@ -8,7 +8,7 @@ from ..api_globals import _HEADER
 from ..api_globals import _PAYLOAD
 from ..message_formatter import MessageFormatter
 
-from .api_exceptions import ConnectionClosedException
+from .api_exceptions import ConnectionClosedException, UninitializedResultSetError
 from .api_exceptions import CursorClosedException
 from .api_exceptions import DatabaseError
 from .api_exceptions import ProgrammingError
@@ -180,13 +180,18 @@ class Cursor:
 
     @connected
     def fetchone(self):
+        """Fetches the next row of a query result set, returning a single object,
+        or None when no more data is available.
+
+        An UninitializedResultSetError is raised if the previous call to
+        .execute*() did not produce any result set or no call was issued yet."""
+
+        if self._result_set is None:
+            raise UninitializedResultSetError("Resultset not initialized")
+
         try:
-            # Added Tuple
             return self._result_set.iloc[next(self._result_set_status)]
         except StopIteration:
-            logging.error(self.mf.format("Catched StopIteration in fetchone"))
-            # We need to put None rather than Series([]) because
-            # SQLAlchemy processes that a row with no columns which it doesn't like
             return None
 
     @connected
@@ -207,8 +212,8 @@ class Cursor:
 
             myresults = self._result_set[index : index + fetch_size]
             return [tuple(x) for x in myresults.to_records(index=False)]
-        except StopIteration:
-            logging.error(self.mf.format("Catched StopIteration in fetchmany"))
+        except StopIteration as e:
+            logging.error(e)
             return None
 
     @connected
