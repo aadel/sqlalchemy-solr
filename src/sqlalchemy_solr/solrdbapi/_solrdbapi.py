@@ -229,16 +229,24 @@ class Cursor:
 
     @connected
     def fetchall(self):
-        # We can't just return a dataframe to sqlalchemy,
-        # it has to be a list of tuples...
+        """
+        Fetches all remaining rows of a query result.
+
+        An UninitializedResultSetError exception is raised if the previous call to
+        .execute*() did not produce any result set or no call was issued yet.
+        """
+
+        if self._result_set is None:
+            raise UninitializedResultSetError("Resultset not initialized")
+
         try:
+            # pylint: disable=unsubscriptable-object
             remaining = self._result_set[next(self._result_set_status) :]
             self._result_set_status = iter(tuple())
             return [tuple(x) for x in remaining.to_records(index=False)]
 
         except StopIteration:
-            logging.error(self.mf.format("Catched StopIteration in fetchall"))
-            return None
+            return []
 
     @connected
     def get_query_metadata(self):
