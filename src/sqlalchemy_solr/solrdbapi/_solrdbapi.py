@@ -74,14 +74,11 @@ class Cursor:
     @staticmethod
     def substitute_in_query(string_query, parameters):
         query = string_query
-        try:
-            for param in parameters:
-                if isinstance(param, str):
-                    query = query.replace("?", f"'{param}'", 1)
-                else:
-                    query = query.replace("?", str(param), 1)
-        except Exception:
-            logging.exception(Cursor.mf.format("Error in Cursor.substitute_in_query"))
+        for param in parameters:
+            if isinstance(param, str):
+                query = query.replace("?", f"'{param}'", 1)
+            else:
+                query = query.replace("?", str(param), 1)
         return query
 
     @staticmethod
@@ -114,6 +111,17 @@ class Cursor:
 
     @connected
     def execute(self, operation, parameters=()):
+        """
+        Prepare and execute a database query.
+
+        Parameters may be provided as sequence and will be
+        bound to variables in the query. Variables are specified in a
+        question mark notation.
+
+        Args:
+             operation (str): The query to be executed
+             parameters (Tuple): The query parameters
+        """
         result = self.submit_query(
             self.substitute_in_query(operation, parameters),
             self.host,
@@ -127,12 +135,13 @@ class Cursor:
         logging.info(self.mf.format("Query:", operation))
 
         if result.status_code != 200:
-            logging.error(self.mf.format("Error in Cursor.execute"))
-            raise ProgrammingError(result.text)
+            raise DatabaseHTTPError(result.text, result.status_code)
 
         rows = result.json()["result-set"]["docs"]
+
         if "EXCEPTION" in rows[0]:
-            raise Exception(rows[0]["EXCEPTION"])
+            raise ProgrammingError(rows[0]["EXCEPTION"])
+
         columns = []
         if "EOF" in rows[-1]:
             del rows[-1]
@@ -157,22 +166,18 @@ class Cursor:
         self._result_set_metadata = column_metadata
         self.rowcount = len(self._result_set)
         self._result_set_status = iter(range(len(self._result_set)))
-        try:
-            self.description = tuple(
-                zip(
-                    column_names,
-                    column_types,
-                    [None for i in range(len(self._result_set.dtypes.index))],
-                    [None for i in range(len(self._result_set.dtypes.index))],
-                    [None for i in range(len(self._result_set.dtypes.index))],
-                    [None for i in range(len(self._result_set.dtypes.index))],
-                    [True for i in range(len(self._result_set.dtypes.index))],
-                )
+        self.description = tuple(
+            zip(
+                column_names,
+                column_types,
+                [None for i in range(len(self._result_set.dtypes.index))],
+                [None for i in range(len(self._result_set.dtypes.index))],
+                [None for i in range(len(self._result_set.dtypes.index))],
+                [None for i in range(len(self._result_set.dtypes.index))],
+                [True for i in range(len(self._result_set.dtypes.index))],
             )
-            return self
-        except Exception:
-            logging.exception(self.mf.format("Error in Cursor.execute"))
-            return None
+        )
+        return self
 
     @connected
     def fetchone(self):
