@@ -334,10 +334,18 @@ class Connection:
 
     @connected
     def commit(self):
-        if self._connected is False:
-            print("AlreadyClosedException")
-        else:
-            print("Here goes some sort of commit")
+        """
+        Solr does not support commit in the transactional context
+        """
+        pass
+
+    @connected
+    def rollback(self):
+        """
+        Solr does not support rollback
+        """
+        pass
+
 
     @connected
     def cursor(self):
