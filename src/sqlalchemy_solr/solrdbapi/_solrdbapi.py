@@ -308,26 +308,6 @@ class Connection:
 
         return func_wrapper
 
-    def is_connected(self):
-        try:
-            if self._connected is True:
-                if self._session:
-                    return True
-                self._connected = False
-        except Exception:
-            logging.exception(self.mf.format("Error in Connection.is_connected"))
-        return False
-
-    @connected
-    def close_connection(self):
-        try:
-            self._session.close()
-            self.close()
-        except Exception:
-            logging.exception(self.mf.format("Error in Connection.close_connection"))
-            return False
-        return True
-
     @connected
     def close(self):
         self._connected = False
