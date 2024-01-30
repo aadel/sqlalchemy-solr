@@ -47,52 +47,44 @@ class SolrTableReflection:
 
                 SolrTableReflection.table_metadata_cache[table] = fields
 
-        try:
             for column in df:
                 names.append(column)
                 # Search for column type in cache
                 prototype = None
                 for table in tables:
-                    if column in SolrTableReflection.table_metadata_cache[table]:
-                        prototype = type_map.type_map[
-                            SolrTableReflection.table_metadata_cache[table][column][
-                                "type"
+                    try:
+                        if column in SolrTableReflection.table_metadata_cache[table]:
+                            prototype = type_map.type_map[
+                                SolrTableReflection.table_metadata_cache[table][column][
+                                    "type"
+                                ]
                             ]
-                        ]
-                if not prototype:
-                    prototype = SolrTableReflection.infer_column_type(df, column)
-                types.append(prototype)
+                    except (AttributeError, KeyError) as e:
+                        logging.warning(e)
 
-        except Exception:
-            logging.exception(
-                SolrTableReflection.mf.format(
-                    "Error in SolrReflect.reflect_column_types"
-                )
-            )
+                    if not prototype:
+                        prototype = SolrTableReflection.infer_column_type(df, column)
+
+                    types.append(prototype)
+
         return names, types
 
     @staticmethod
     def infer_column_type(df, column):
         try:
+            df[column] = df[column].astype(int)
+            return "bigint"
+        except ValueError:
             try:
-                df[column] = df[column].astype(int)
-                return "bigint"
+                df[column] = df[column].astype(float)
+                return "decimal"
             except ValueError:
                 try:
-                    df[column] = df[column].astype(float)
-                    return "decimal"
+                    df[column] = to_datetime(df[column])
+                    return "timestamp"
                 except ValueError:
-                    try:
-                        df[column] = to_datetime(df[column])
-                        return "timestamp"
-                    except ValueError:
-                        return "varchar"
-        except Exception:
-            logging.exception(
-                SolrTableReflection.mf.format(
-                    "Error in SolrTableReflection.infer_column_types"
-                )
-            )
+                    logging.warning('Cannot infer type of column %s, defaulting to varchar', column)
+                    return "varchar"
 
     @staticmethod
     def extract_from_part(parsed):
