@@ -58,9 +58,9 @@ class TestSteps:
         )
         return db
 
-    def delete_database(self, session, headers, id):
+    def delete_database(self, session, headers, database_id):
         response = session.delete(
-            self.settings["SUPERSET_URI"] + "/api/v1/database/" + str(id),
+            self.settings["SUPERSET_URI"] + "/api/v1/database/" + str(database_id),
             headers=headers,
         )
         if response.status_code != 200:
@@ -78,7 +78,7 @@ class TestSteps:
             for dataset in related_datasets:
                 self.delete_dataset(session, headers, dataset["id"])
             response = session.delete(
-                self.settings["SUPERSET_URI"] + "/api/v1/database/" + str(id),
+                self.settings["SUPERSET_URI"] + "/api/v1/database/" + str(database_id),
                 headers=headers,
             )
             if response.status_code != 200:
@@ -109,9 +109,9 @@ class TestSteps:
         )
         return dataset_creation_response
 
-    def delete_dataset(self, session, headers, id):
+    def delete_dataset(self, session, headers, dataset_id):
         response = session.delete(
-            self.settings["SUPERSET_URI"] + "/api/v1/dataset/" + str(id),
+            self.settings["SUPERSET_URI"] + "/api/v1/dataset/" + str(dataset_id),
             headers=headers,
         )
         if response.status_code != 200:
