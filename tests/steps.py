@@ -1,3 +1,6 @@
+from tests.exceptions import CouldNotDeleteDatabaseException, CouldNotDeleteDatasetException
+
+
 class TestSteps:
 
     settings = None
@@ -82,7 +85,7 @@ class TestSteps:
                 headers=headers,
             )
             if response.status_code != 200:
-                raise Exception("Could not delete database")
+                raise CouldNotDeleteDatabaseException(response.text, response.status_code)
 
     def create_dataset(self, session, headers, database_id):
         datasets_response = session.get(
@@ -115,4 +118,4 @@ class TestSteps:
             headers=headers,
         )
         if response.status_code != 200:
-            raise Exception("Could not delete dataset")
+            raise CouldNotDeleteDatasetException(response.text, response.status_code)
