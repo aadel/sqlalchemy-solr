@@ -31,6 +31,8 @@ from sqlalchemy.sql import expression
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.expression import BindParameter
 
+from . import solrdbapi as module
+
 from .type_map import type_map
 
 from .solr_type_compiler import SolrTypeCompiler
@@ -510,9 +512,8 @@ class SolrDialect(default.DefaultDialect):
         self.supported_extensions = []
 
     @classmethod
+    # pylint: disable=method-hidden
     def dbapi(cls):
-        from . import solrdbapi as module
-
         return module
 
     def do_rollback(self, dbapi_connection):
