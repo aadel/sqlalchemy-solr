@@ -7,8 +7,10 @@ import pytest
 def settings():
     solr_worker_collection_name = "sales_test_"
     if os.environ.get("SOLR_USER"):
-        solr_connection_uri = f'solr://{os.environ.get("SOLR_USER")}:{os.environ.get("SOLR_PASS")}@solr:8983/solr/' \
-            + solr_worker_collection_name
+        # pylint: disable=consider-using-f-string
+        solr_connection_uri = 'solr://{user}:{passwd}@solr:8983/solr/{collection}'.format(
+            user=os.environ.get("SOLR_USER"), passwd=os.environ.get("SOLR_PASS"),
+            collection=solr_worker_collection_name)
     else:
         solr_connection_uri = 'solr://solr:8983/solr/' + solr_worker_collection_name
 

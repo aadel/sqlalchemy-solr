@@ -1,11 +1,25 @@
+from dataclasses import dataclass
+import pytest
 from sqlalchemy import and_
 from sqlalchemy import select
+from sqlalchemy import Table
 
 from tests.setup import prepare_orm
 
+@dataclass
+class Parameters:
+    engine: any
+    t: Table
+    lower_bound: str
+    upper_bound: str
+    lower_bound_iso: str
+    upper_bound_iso: str
+    select_statements: list[str]
+
 class TestDateRangeCompilation:
 
-    def test_solr_date_range_compilation(self, settings):
+    @pytest.fixture(scope="class")
+    def parameters(self, settings):
         engine, t = prepare_orm(settings)
 
         lower_bound = "2017-05-10 00:00:00"
@@ -18,186 +32,209 @@ class TestDateRangeCompilation:
             "\nWHERE sales_test_.`ORDERDATE_dt` = "
         )
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+        p = Parameters(engine, t, lower_bound, upper_bound, lower_bound_iso, upper_bound_iso, \
+            [select_statement_1, select_statement_2])
+
+        return p
+
+    def test_solr_date_range_compilation_1(self, parameters):
+
+        p = parameters
+
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(
             100
         )  # pylint: disable=unsubscriptable-object
         qry = qry.where(
             and_(
-                t.columns["ORDERDATE_dt"]
-                >= lower_bound,  # pylint: disable=unsubscriptable-object
-                t.columns["ORDERDATE_dt"] <= upper_bound,
+                p.t.columns["ORDERDATE_dt"]
+                >= p.lower_bound,  # pylint: disable=unsubscriptable-object
+                p.t.columns["ORDERDATE_dt"] <= p.upper_bound,
             )
         )  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        result = p.engine.execute(qry)
 
         assert (
             result.context.statement
-            == select_statement_1
+            == p.select_statements[0]
             + "AND sales_test_.`ORDERDATE_dt` = '["
-            + lower_bound_iso
+            + p.lower_bound_iso
             + " TO "
-            + upper_bound_iso
+            + p.upper_bound_iso
             + "]'\n LIMIT ?"
         )
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+    def test_solr_date_range_compilation_2(self, parameters):
+        p = parameters
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(
             100
         )  # pylint: disable=unsubscriptable-object
         qry = qry.where(
             and_(
-                t.columns["ORDERDATE_dt"]
-                > lower_bound,  # pylint: disable=unsubscriptable-object
-                t.columns["ORDERDATE_dt"] <= upper_bound,
+                p.t.columns["ORDERDATE_dt"]
+                > p.lower_bound,  # pylint: disable=unsubscriptable-object
+                p.t.columns["ORDERDATE_dt"] <= p.upper_bound,
             )
         )  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        result = p.engine.execute(qry)
 
         assert (
             result.context.statement
-            == select_statement_1
+            == p.select_statements[0]
             + "AND sales_test_.`ORDERDATE_dt` = '{"
-            + lower_bound_iso
+            + p.lower_bound_iso
             + " TO "
-            + upper_bound_iso
+            + p.upper_bound_iso
             + "]'\n LIMIT ?"
         )
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+    def test_solr_date_range_compilation_3(self, parameters):
+        p = parameters
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(
             100
         )  # pylint: disable=unsubscriptable-object
         qry = qry.where(
             and_(
-                t.columns["ORDERDATE_dt"]
-                >= lower_bound,  # pylint: disable=unsubscriptable-object
-                t.columns["ORDERDATE_dt"] < upper_bound,
+                p.t.columns["ORDERDATE_dt"]
+                >= p.lower_bound,  # pylint: disable=unsubscriptable-object
+                p.t.columns["ORDERDATE_dt"] < p.upper_bound,
             )
         )  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        result = p.engine.execute(qry)
 
         assert (
             result.context.statement
-            == select_statement_1
+            == p.select_statements[0]
             + "AND sales_test_.`ORDERDATE_dt` = '["
-            + lower_bound_iso
+            + p.lower_bound_iso
             + " TO "
-            + upper_bound_iso
+            + p.upper_bound_iso
             + "}'\n LIMIT ?"
         )
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+    def test_solr_date_range_compilation_4(self, parameters):
+        p = parameters
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(
             100
         )  # pylint: disable=unsubscriptable-object
         qry = qry.where(
             and_(
-                t.columns["ORDERDATE_dt"]
-                > lower_bound,  # pylint: disable=unsubscriptable-object
-                t.columns["ORDERDATE_dt"] < upper_bound,
+                p.t.columns["ORDERDATE_dt"]
+                > p.lower_bound,  # pylint: disable=unsubscriptable-object
+                p.t.columns["ORDERDATE_dt"] < p.upper_bound,
             )
         )  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        result = p.engine.execute(qry)
 
         assert (
             result.context.statement
-            == select_statement_1
+            == p.select_statements[0]
             + "AND sales_test_.`ORDERDATE_dt` = '{"
-            + lower_bound_iso
+            + p.lower_bound_iso
             + " TO "
-            + upper_bound_iso
+            + p.upper_bound_iso
             + "}'\n LIMIT ?"
         )
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+    def test_solr_date_range_compilation_5(self, parameters):
+        p = parameters
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(
             100
         )  # pylint: disable=unsubscriptable-object
         qry = qry.where(
             and_(
-                t.columns["ORDERDATE_dt"]
-                <= upper_bound,  # pylint: disable=unsubscriptable-object
-                t.columns["ORDERDATE_dt"] >= lower_bound,
+                p.t.columns["ORDERDATE_dt"]
+                <= p.upper_bound,  # pylint: disable=unsubscriptable-object
+                p.t.columns["ORDERDATE_dt"] >= p.lower_bound,
             )
         )  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        result = p.engine.execute(qry)
 
         assert (
             result.context.statement
-            == select_statement_2
+            == p.select_statements[1]
             + "'["
-            + lower_bound_iso
+            + p.lower_bound_iso
             + " TO "
-            + upper_bound_iso
+            + p.upper_bound_iso
             + "]' AND TRUE\n LIMIT ?"
         )
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+    def test_solr_date_range_compilation_6(self, parameters):
+        p = parameters
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(
             100
         )  # pylint: disable=unsubscriptable-object
         qry = qry.where(
             and_(
-                t.columns["ORDERDATE_dt"]
-                < upper_bound,  # pylint: disable=unsubscriptable-object
-                t.columns["ORDERDATE_dt"] >= lower_bound,
+                p.t.columns["ORDERDATE_dt"]
+                < p.upper_bound,  # pylint: disable=unsubscriptable-object
+                p.t.columns["ORDERDATE_dt"] >= p.lower_bound,
             )
         )  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        result = p.engine.execute(qry)
 
         assert (
             result.context.statement
-            == select_statement_2
+            == p.select_statements[1]
             + "'["
-            + lower_bound_iso
+            + p.lower_bound_iso
             + " TO "
-            + upper_bound_iso
+            + p.upper_bound_iso
             + "}' AND TRUE\n LIMIT ?"
         )
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+    def test_solr_date_range_compilation_7(self, parameters):
+        p = parameters
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(
             100
         )  # pylint: disable=unsubscriptable-object
         qry = qry.where(
             and_(
-                t.columns["ORDERDATE_dt"]
-                <= upper_bound,  # pylint: disable=unsubscriptable-object
-                t.columns["ORDERDATE_dt"] > lower_bound,
+                p.t.columns["ORDERDATE_dt"]
+                <= p.upper_bound,  # pylint: disable=unsubscriptable-object
+                p.t.columns["ORDERDATE_dt"] > p.lower_bound,
             )
         )  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        result = p.engine.execute(qry)
 
         assert (
             result.context.statement
-            == select_statement_2
+            == p.select_statements[1]
             + "'{"
-            + lower_bound_iso
+            + p.lower_bound_iso
             + " TO "
-            + upper_bound_iso
+            + p.upper_bound_iso
             + "]' AND TRUE\n LIMIT ?"
         )
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
+    def test_solr_date_range_compilation_8(self, parameters):
+        p = parameters
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(
             100
         )  # pylint: disable=unsubscriptable-object
         qry = qry.where(
             and_(
-                t.columns["ORDERDATE_dt"]
-                < upper_bound,  # pylint: disable=unsubscriptable-object
-                t.columns["ORDERDATE_dt"] > lower_bound,
+                p.t.columns["ORDERDATE_dt"]
+                < p.upper_bound,  # pylint: disable=unsubscriptable-object
+                p.t.columns["ORDERDATE_dt"] > p.lower_bound,
             )
         )  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        result = p.engine.execute(qry)
 
         assert (
             result.context.statement
-            == select_statement_2
+            == p.select_statements[1]
             + "'{"
-            + lower_bound_iso
+            + p.lower_bound_iso
             + " TO "
-            + upper_bound_iso
+            + p.upper_bound_iso
             + "}' AND TRUE\n LIMIT ?"
         )
