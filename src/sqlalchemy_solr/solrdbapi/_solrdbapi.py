@@ -317,14 +317,12 @@ class Connection:
         """
         Solr does not support commit in the transactional context
         """
-        pass
 
     @connected
     def rollback(self):
         """
         Solr does not support rollback
         """
-        pass
 
 
     @connected
