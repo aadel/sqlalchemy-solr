@@ -25,6 +25,7 @@ class Cursor:
 
     mf = MessageFormatter()
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         host,
@@ -82,6 +83,7 @@ class Cursor:
         return query
 
     @staticmethod
+    # pylint: disable=too-many-arguments
     def submit_query(
         query, host, port, proto, server_path, collection, session
     ):
@@ -269,6 +271,7 @@ class Connection:
 
     mf = MessageFormatter()
 
+    # pylint: disable=too-many-arguments
     def __init__(
         self,
         host,
@@ -341,6 +344,7 @@ class Connection:
         )
 
 
+# pylint: disable=too-many-arguments
 def connect(
     host,
     port=8047,

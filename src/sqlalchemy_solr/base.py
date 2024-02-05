@@ -174,7 +174,7 @@ class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     # pylint: disable=too-few-public-methods
 
      # Solr has no schema concept
-    schema_for_object = lambda self, obj: ()
+    schema_for_object = lambda self, obj: ()    # pylint: disable=unnecessary-lambda-assignment
 
     reserved_words = compiler.RESERVED_WORDS.copy()
     reserved_words.update(
