@@ -56,7 +56,15 @@ class SolrCompiler(compiler.SQLCompiler):
         """
         return " FROM (values(1))"
 
-    def visit_binary(self, binary, override_operator=None, eager_grouping=False, **kw):
+    # pylint: disable=too-many-arguments, too-many-branches
+    def visit_binary(self,
+        binary,
+        override_operator=None,
+        eager_grouping=False,
+        from_linter=None,
+        lateral_from_linter=None,
+        **kw):
+
         if binary.operator not in self.merge_ops:
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
@@ -535,7 +543,7 @@ class SolrDialect(default.DefaultDialect):
     def get_view_names(self, connection, schema=None, **kw):
         return []
 
-    def has_table(self, connection, table_name, schema=None):
+    def has_table(self, connection, table_name, schema=None, **kw):
         try:
             self.get_columns(connection, table_name, schema)
             return True
