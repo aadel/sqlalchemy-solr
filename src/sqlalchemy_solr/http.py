@@ -22,7 +22,6 @@
 import logging
 
 from requests import RequestException, Session
-from sqlalchemy.engine import default
 
 from sqlalchemy_solr.solrdbapi.api_exceptions import DatabaseError
 
@@ -41,6 +40,8 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
     mf = MessageFormatter()
 
     def __init__(self, **kw):
+        super().__init__(**kw)
+
         self.proto = None
         self.host = None
         self.port = None
@@ -51,7 +52,6 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         self.password = None
         self.token = None
         self.session = None
-        default.DefaultDialect.__init__(self, **kw)
         self.supported_extensions = []
 
         self.aliases = []
