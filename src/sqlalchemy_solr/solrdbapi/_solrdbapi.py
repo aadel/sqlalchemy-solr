@@ -60,12 +60,16 @@ class Cursor:
         self.lastrowid = None
         self.default_storage_plugin = None
 
+    @property
+    def connected(self):
+        return self._connected
+
     # Decorator for methods which require connection
-    def connected(func):  # pylint: disable=no-self-argument # noqa: B902
+    def connected_(func):  # pylint: disable=no-self-argument # noqa: B902
         def func_wrapper(self, *args, **kwargs):
-            if self._connected is False:
+            if self.connected is False:
                 raise CursorClosedException("Cursor object is closed")
-            if self.connection._connected is False:
+            if self.connection.connected is False:
                 raise ConnectionClosedException("Connection object is closed")
 
             return func(self, *args, **kwargs)  # pylint: disable=not-callable
@@ -103,15 +107,15 @@ class Cursor:
             headers=_HEADER,
         )
 
-    @connected
+    @connected_
     def getdesc(self):
         return self.description
 
-    @connected
+    @connected_
     def close(self):
         self._connected = False
 
-    @connected
+    @connected_
     def execute(self, operation, parameters=()):
         """
         Prepare and execute a database query.
@@ -181,7 +185,7 @@ class Cursor:
         )
         return self
 
-    @connected
+    @connected_
     def fetchone(self):
         """Fetches the next row of a query result set, returning a single object,
         or None when no more data is available.
@@ -197,7 +201,7 @@ class Cursor:
         except StopIteration:
             return None
 
-    @connected
+    @connected_
     def fetchmany(self, size=None):
         """Fetches the next set of rows of a query result, returning a list of tuples.
         An empty list is returned when no more rows are available.
@@ -234,7 +238,7 @@ class Cursor:
         except StopIteration:
             return []
 
-    @connected
+    @connected_
     def fetchall(self):
         """
         Fetches all remaining rows of a query result.
@@ -255,7 +259,7 @@ class Cursor:
         except StopIteration:
             return []
 
-    @connected
+    @connected_
     def get_query_metadata(self):
         return self._result_set_metadata
 
@@ -298,10 +302,18 @@ class Connection:
 
         SolrTableReflection.connection = self
 
+    @property
+    def session(self):
+        return self._session
+
+    @property
+    def connected(self):
+        return self._connected
+
     # Decorator for methods which require connection
-    def connected(func):  # pylint: disable=no-self-argument # noqa: B902
+    def connected_(func):  # pylint: disable=no-self-argument # noqa: B902
         def func_wrapper(self, *args, **kwargs):
-            if self._connected is False:
+            if self.connected is False:
                 logging.error(
                     self.mf.format("ConnectionClosedException in func_wrapper")
                 )
@@ -311,24 +323,24 @@ class Connection:
 
         return func_wrapper
 
-    @connected
+    @connected_
     def close(self):
         self._connected = False
 
-    @connected
+    @connected_
     def commit(self):
         """
         Solr does not support commit in the transactional context
         """
 
-    @connected
+    @connected_
     def rollback(self):
         """
         Solr does not support rollback
         """
 
 
-    @connected
+    @connected_
     def cursor(self):
         return Cursor(
             self.host,

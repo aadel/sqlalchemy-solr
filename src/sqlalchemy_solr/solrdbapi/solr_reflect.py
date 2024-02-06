@@ -29,7 +29,7 @@ class SolrTableReflection:
 
         for table in tables:
             if table not in SolrTableReflection.table_metadata_cache:
-                session = SolrTableReflection.connection._session
+                session = SolrTableReflection.connection.session
 
                 result = session.get(
                     SolrTableReflection.connection.proto
