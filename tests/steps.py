@@ -53,11 +53,7 @@ class TestSteps:
         )
         dbs = dbs_response.json()["result"]
         db = list(
-            filter(
-                lambda db: db["database_name"]
-                == self.settings["SUPERSET_DATABASE_NAME"],
-                dbs,
-            )
+            filter(lambda db: db["database_name"] == name, dbs)
         )
         return db
 
