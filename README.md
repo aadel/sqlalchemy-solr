@@ -1,4 +1,4 @@
-![pylint]()
+[![linting: pylint](https://img.shields.io/badge/linting-pylint-yellowgreen)](https://github.com/pylint-dev/pylint)
 
 # Apache Solr dialect for SQLAlchemy
 
@@ -55,7 +55,7 @@ Aliases are supported as tables where columns are the union of all the undetlayi
 
 where `f1`, `f2`, and `f3` are defined in the linked collections.
 
-### Time Filtration
+### Time Filters
 
 Time filtration predicates are transformed to Solr syntax when ORM mode is used.
 
@@ -101,7 +101,7 @@ with Session(engine) as session:
 ```
 where `index_i`, `book_name_t`, and `publishing_year_i` are fields of `books` collection.
 
-## Time Filtration Example
+## Time Filters Example
 
 ```
 Base = declarative_base()
@@ -121,7 +121,7 @@ engine = create_engine('solr://solr:8983/solr/sales')
 
 with Session(engine) as session:
     stmt = select(SalesHistory) \
-        .where(and_(SalesHistory.order_date >= ("2024-01-01T00:00:00"), SalesHistory.order_date < "2024-01-31T23:59:59")) \
+        .where(and_(SalesHistory.order_date >= "2024-01-01T00:00:00", SalesHistory.order_date < "2024-02-01T00:00:00")) \
         .order_by(SalesHistory.price_each.asc()) \
         .limit(10)
 
@@ -130,13 +130,15 @@ with Session(engine) as session:
 ```
 where `order_number_i`, `price_each_f`, `status_s`, and `order_date_dt` fields of `sales` collection.
 
-## Use cases
+In the above example, the date predicates are transformed to `[2024-01-01T00:00:00Z TO 2024-02-01T00:00:00Z}`.
+
+## Use Cases
 
 ### Apache Superset
 
 To connect Apache Superset with Solr datasource, add the package to the requirements then create a database connection using the URL pattern shown above.
 
-## Testing
+## Testing with Apache Superset
 
 #### Requirements
 
@@ -152,3 +154,4 @@ To connect Apache Superset with Solr datasource, add the package to the requirem
 ## Resources
 1. [SQLAlchemy documentation](https://docs.sqlalchemy.org/en/13/index.html)
 2. [SQLAlchemy dialects](https://docs.sqlalchemy.org/en/13/dialects/index.html)
+3. [PEP 249 – Python Database API Specification v2.0](https://peps.python.org/pep-0249/)
