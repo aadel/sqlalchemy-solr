@@ -238,3 +238,78 @@ class TestDateRangeCompilation:
             + p.upper_bound_iso
             + "}' AND TRUE\n LIMIT ?"
         )
+
+    def test_solr_date_range_compilation_9(self, parameters):
+        p = parameters
+        # pylint: disable=unsubscriptable-object
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(100)
+        # pylint: disable=unsubscriptable-object
+        qry = qry.where(p.t.columns["ORDERDATE_dt"] > p.lower_bound)
+
+        result = p.engine.execute(qry)
+
+        assert (
+            result.context.statement
+            == p.select_statements[1]
+            + "'{"
+            + p.lower_bound_iso
+            + " TO "
+            + "*"
+            + "]'\n LIMIT ?"
+        )
+
+    def test_solr_date_range_compilation_10(self, parameters):
+        p = parameters
+        # pylint: disable=unsubscriptable-object
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(100)
+        # pylint: disable=unsubscriptable-object
+        qry = qry.where(p.t.columns["ORDERDATE_dt"] <= p.upper_bound)
+
+        result = p.engine.execute(qry)
+
+        assert (
+            result.context.statement
+            == p.select_statements[1]
+            + "'["
+            + '*'
+            + " TO "
+            + p.upper_bound_iso
+            + "]'\n LIMIT ?"
+        )
+    def test_solr_date_range_compilation_11(self, parameters):
+        p = parameters
+        # pylint: disable=unsubscriptable-object
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(100)
+        # pylint: disable=unsubscriptable-object
+        qry = qry.where(p.t.columns["ORDERDATE_dt"] >= p.lower_bound)
+
+        result = p.engine.execute(qry)
+
+        assert (
+            result.context.statement
+            == p.select_statements[1]
+            + "'["
+            + p.lower_bound_iso
+            + " TO "
+            + "*"
+            + "]'\n LIMIT ?"
+        )
+
+    def test_solr_date_range_compilation_12(self, parameters):
+        p = parameters
+        # pylint: disable=unsubscriptable-object
+        qry = (select([p.t.columns["CITY_s"]]).select_from(p.t)).limit(100)
+        # pylint: disable=unsubscriptable-object
+        qry = qry.where(p.t.columns["ORDERDATE_dt"] < p.upper_bound)
+
+        result = p.engine.execute(qry)
+
+        assert (
+            result.context.statement
+            == p.select_statements[1]
+            + "'["
+            + '*'
+            + " TO "
+            + p.upper_bound_iso
+            + "}'\n LIMIT ?"
+        )

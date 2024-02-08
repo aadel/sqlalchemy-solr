@@ -103,8 +103,8 @@ class SolrCompiler(compiler.SQLCompiler):
                         udatetime = parser.parse(self.unescape_colon(
                             kw[str(binary.left)][uoperator].right.text
                         ))
-                else:
-                    ubound, udatetime = "]", "*"
+            else:
+                ubound, udatetime = "]", "*"
         else:
             udatetime = dt
             ubound = self.bounds[binary.operator]
@@ -125,8 +125,8 @@ class SolrCompiler(compiler.SQLCompiler):
                         ldatetime = parser.parse(self.unescape_colon(
                             kw[str(binary.left)][loperator].right.text
                         ))
-                else:
-                    lbound, ldatetime = "[", "*"
+            else:
+                lbound, ldatetime = "[", "*"
 
         binary.right = expression.TextClause(
             "'"
