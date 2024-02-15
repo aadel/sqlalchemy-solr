@@ -47,10 +47,10 @@ If HTTPS is enabled, the following parameters can be supplied:
 
 ### Aliases
 
-Aliases are supported as tables where columns are the union of all the undetlaying collections fields. For example, if an alias `foo` has linked collection members, the following query is valid:
+Aliases are supported as tables where columns are the union of all the undetlaying collections fields. For example, if an alias `collection_alias` has linked collection members, the following query is valid:
 
 ```
-    SELECT f1, f2, f3 FROM foo
+SELECT f1, f2, f3 FROM collection_alias
 ```
 
 where `f1`, `f2`, and `f3` are defined in the linked collections.
@@ -59,9 +59,16 @@ where `f1`, `f2`, and `f3` are defined in the linked collections.
 
 Time filtration predicates are transformed to Solr syntax when ORM mode is used.
 
+### Multi-valued Fields
+
+Multi-value fields are mapped to SQL arrays of a specific scalar type. For example:
+```
+phones = Column('PHONE_ss', ARRAY(String))
+```
+
 ### Schema
 
-If the ORM query supplied explicitly refers to schema, the schema would be filtered out before execution.
+If the ORM query supplied explicitly refers to a schema, the schema would be filtered out before query execution.
 
 ## Basic Example
 
@@ -121,7 +128,7 @@ engine = create_engine('solr://solr:8983/solr/sales')
 
 with Session(engine) as session:
     stmt = select(SalesHistory) \
-        .where(and_(SalesHistory.order_date >= "2024-01-01T00:00:00", SalesHistory.order_date < "2024-02-01T00:00:00")) \
+        .where(and_(SalesHistory.order_date >= "2024-01-01 00:00:00", SalesHistory.order_date < "2024-02-01 00:00:00")) \
         .order_by(SalesHistory.price_each.asc()) \
         .limit(10)
 
@@ -130,7 +137,15 @@ with Session(engine) as session:
 ```
 where `order_number_i`, `price_each_f`, `status_s`, and `order_date_dt` fields of `sales` collection.
 
-In the above example, the date predicates are transformed to `[2024-01-01T00:00:00Z TO 2024-02-01T00:00:00Z}`.
+In the above example, date predicates are transformed to `[2024-01-01T00:00:00Z TO 2024-02-01T00:00:00Z}`.
+
+Open-ended date ranges are supported. For example:
+
+```
+.where(SalesHistory.order_date >= "2024-01-01 00:00:00")
+```
+
+translates to `[2024-01-01T00:00:00Z TO *]`
 
 ## Use Cases
 
