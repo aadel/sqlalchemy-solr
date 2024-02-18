@@ -4,7 +4,7 @@ pre-commit
 
 pysolr~=3.9.0
 pytest~=6.2.2
-requests~=2.25.1
+requests~=2.31.0
 numpy~=1.22
 pandas~=1.2.2
 setuptools~=69.0.2
