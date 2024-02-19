@@ -2,6 +2,7 @@ from tests.exceptions import CouldNotDeleteDatabaseException, CouldNotDeleteData
 
 
 class TestSteps:
+    __test__ = False
 
     settings = None
 
