@@ -16,11 +16,10 @@ class TestFilteringOutSchema:
 
         select_statement_1 = "SELECT sales_test_.`CITY_s` \nFROM sales_test_\n LIMIT ?"
 
-        qry = (select([t.columns["CITY_s"]]).select_from(t)).limit(
-            100
-        )  # pylint: disable=unsubscriptable-object
+        qry = (select(t.c.CITY_s).select_from(t)).limit(1)  # pylint: disable=unsubscriptable-object
 
-        result = engine.execute(qry)
+        with engine.connect() as connection:
+            result = connection.execute(qry)
 
         assert (
             result.context.statement

@@ -23,7 +23,6 @@ def prepare_orm(settings):
     t = Table(
         settings["SOLR_WORKER_COLLECTION_NAME"],
         metadata,
-        autoload=True,
         autoload_with=engine,
     )
 
