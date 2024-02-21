@@ -42,8 +42,11 @@ class TestGetColumns:
         test_steps = TestSteps(settings)
         session, headers, db_response = create_database(settings)
         test_steps.create_dataset(session, headers, db_response[0]["id"])
+        # pylint: disable=consider-using-f-string
         datasets_response = session.get(
-            settings["SUPERSET_URI"] + "/api/v1/dataset", headers=headers
+            settings["SUPERSET_URI"] + "/api/v1/dataset", headers=headers,
+            params={"q":'{{"filters":[{{"col":"table_name","opr":"eq","value":"{}"}}]}}'.format(
+                settings["SUPERSET_DATABASE_NAME"])}
         )
         datasets = datasets_response.json()["result"]
         sales_dataset = filter(

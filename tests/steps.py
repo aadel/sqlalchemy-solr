@@ -39,7 +39,7 @@ class TestSteps:
             self.delete_database(session, headers, db[0]["id"])
         creation_params = {
             "sqlalchemy_uri": self.settings["SOLR_CONNECTION_URI"],
-            "database_name": "sales_test_",
+            "database_name": self.settings["SUPERSET_DATABASE_NAME"],
         }
         db_creation_response = session.post(
             self.settings["SUPERSET_URI"] + "/api/v1/database",
@@ -59,30 +59,22 @@ class TestSteps:
         return db
 
     def delete_database(self, session, headers, database_id):
+        # pylint: disable=consider-using-f-string
+        datasets_response = session.get(
+            self.settings["SUPERSET_URI"] + "/api/v1/dataset", headers=headers,
+            params={"q":'{{"filters":[{{"col":"table_name","opr":"eq","value":"{}"}}]}}'.format(
+                self.settings["SUPERSET_DATABASE_NAME"])}
+        )
+        datasets = datasets_response.json()["result"]
+        for dataset in datasets:
+            self.delete_dataset(session, headers, dataset["id"])
+
         response = session.delete(
             self.settings["SUPERSET_URI"] + "/api/v1/database/" + str(database_id),
             headers=headers,
         )
         if response.status_code != 200:
-            datasets_response = session.get(
-                self.settings["SUPERSET_URI"] + "/api/v1/dataset", headers=headers
-            )
-            datasets = datasets_response.json()["result"]
-            related_datasets = list(
-                filter(
-                    lambda dataset: dataset["database"]["database_name"]
-                    == self.settings["SUPERSET_DATABASE_NAME"],
-                    datasets,
-                )
-            )
-            for dataset in related_datasets:
-                self.delete_dataset(session, headers, dataset["id"])
-            response = session.delete(
-                self.settings["SUPERSET_URI"] + "/api/v1/database/" + str(database_id),
-                headers=headers,
-            )
-            if response.status_code != 200:
-                raise CouldNotDeleteDatabaseException(response.text, response.status_code)
+            raise CouldNotDeleteDatabaseException(response.text, response.status_code)
 
     def create_dataset(self, session, headers, database_id):
         datasets_response = session.get(
