@@ -37,6 +37,8 @@ logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
 class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
     # pylint: disable=abstract-method,too-many-instance-attributes
 
+    supports_statement_cache = True
+
     mf = MessageFormatter()
 
     def __init__(self, **kw):
