@@ -70,6 +70,10 @@ Multi-value fields are mapped to SQL arrays of a specific scalar type. For examp
 phones = Column('PHONE_ss', ARRAY(String))
 ```
 
+### SQL Compilation Caching
+
+The dialect supports caching by leveraging SQLAlchemy SQL compilation caching capabilities, which include query caching.
+
 ### Schema
 
 If the ORM query supplied explicitly refers to a schema, the schema would be filtered out before query execution.
