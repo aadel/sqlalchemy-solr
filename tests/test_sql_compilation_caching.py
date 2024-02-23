@@ -1,5 +1,6 @@
 from sqlalchemy import select
 from sqlalchemy.sql.expression import bindparam
+from sqlalchemy.util.langhelpers import _symbol
 
 from tests.setup import prepare_orm
 from .fixtures.fixtures import SalesFixture
@@ -13,37 +14,44 @@ class TestSQLCompilationCaching:
     def test_sql_compilation_caching_1(self, caplog, settings):
         engine, t = prepare_orm(settings)
 
-        qry_1 = (select(t.c.CITY_s).select_from(t)).limit(1)  # pylint: disable=unsubscriptable-object
-        qry_2 = (select(t.c.CITY_s).select_from(t)).limit(10)  # pylint: disable=unsubscriptable-object
+        qry_1 = (select(t.c.CITY_s).select_from(t)).limit(1)
+        qry_2 = (select(t.c.CITY_s).select_from(t)).limit(10)
 
-        with engine.connect() as connection:
-            connection.execute(qry_1)
-            connection.execute(qry_2)
+        k1 = qry_1._generate_cache_key()
+        k2 = qry_2._generate_cache_key()
 
-        assert 'generated in' in caplog.text
-        assert 'cached since' in caplog.text
+        assert k1 == k2
 
     def test_sql_compilation_caching_2(self, caplog, settings):
         engine, t = prepare_orm(settings)
 
-        qry_1 = (select(t.c.CITY_s).select_from(t)).limit(1).offset(1)  # pylint: disable=unsubscriptable-object
-        qry_2 = (select(t.c.CITY_s).select_from(t)).limit(1).offset(2)  # pylint: disable=unsubscriptable-object
+        qry_1 = (select(t.c.CITY_s).select_from(t)).limit(1).offset(1)
+        qry_2 = (select(t.c.CITY_s).select_from(t)).limit(1).offset(2)
 
-        with engine.connect() as connection:
-            connection.execute(qry_1)
-            connection.execute(qry_2)
+        k1 = qry_1._generate_cache_key()
+        k2 = qry_2._generate_cache_key()
 
-        assert 'generated in' in caplog.text
-        assert 'cached since' in caplog.text
+        assert k1 == k2
 
     def test_sql_compilation_caching_3(self, caplog, settings):
         engine, t = prepare_orm(settings)
 
-        qry = select(t).where(t.c.CITY_s == bindparam('CITY_s')).limit(10)  # pylint: disable=unsubscriptable-object
+        qry = select(t).where(t.c.CITY_s == bindparam('CITY_s')).limit(10)
 
         with engine.connect() as connection:
-            connection.execute(qry, params={'CITY_s': 'Singapore'})
-            connection.execute(qry, CITY_s='Boras')
+            result_1 = connection.execute(qry, {'CITY_s': 'Singapore'})
+            result_2 = connection.execute(qry, {'CITY_s': 'Boras'})
 
-        assert 'generated in' in caplog.text
-        assert 'cached since' in caplog.text
+        assert result_1.context.cache_hit == _symbol('CACHE_MISS')
+        assert result_2.context.cache_hit == _symbol('CACHE_HIT')
+
+    def test_sql_compilation_caching_4(self, caplog, settings):
+        engine, t = prepare_orm(settings)
+
+        qry_1 = select(t).where(t.c.CITY_s == bindparam('CITY_s')).limit(10)
+        qry_2 = select(t).where(t.c.COUNTRY_s == bindparam('COUNTRY_s')).limit(10)
+
+        k1 = qry_1._generate_cache_key()
+        k2 = qry_2._generate_cache_key()
+
+        assert k1 != k2
