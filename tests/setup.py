@@ -18,7 +18,6 @@ def prepare_orm(settings):
         settings["SOLR_CONNECTION_URI"]
         + "/"
         + settings["SOLR_WORKER_COLLECTION_NAME"],
-        echo=True,
     )
     t = Table(
         settings["SOLR_WORKER_COLLECTION_NAME"],
