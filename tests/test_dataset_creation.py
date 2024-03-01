@@ -5,7 +5,7 @@ from .steps import TestSteps
 
 class TestDatasetCreation:
     # pylint: disable=too-few-public-methods
-    def test_db_creation(self, settings):
+    def test_dataset_creation(self, settings):
         test_steps = TestSteps(settings)
         session, headers, db_response = create_database(settings)
         database_id = db_response[0]["id"]
