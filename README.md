@@ -4,6 +4,10 @@
 
 A [SQLAlchemy](https://www.sqlalchemy.org/) dialect for Apache Solr.
 
+## Requirements
+
+The dialect requires Solr version 6.0 or newer.
+
 ## Installation
 
 The package can either be installed through PyPi or from the source code.
@@ -57,7 +61,7 @@ where `f1`, `f2`, and `f3` are defined in the linked collections.
 
 ### Time Filters
 
-Time filtration predicates are transformed to Solr syntax when ORM mode is used.
+Time filtration predicates are transformed to Solr syntax when ORM mode is used and Solr datasource release is lower than 9. Time filters transformations are handled internally by Solr 9 and above without the driver intervention. Open- and close-ended date ranges are supported.
 
 ### Multi-valued Fields
 
