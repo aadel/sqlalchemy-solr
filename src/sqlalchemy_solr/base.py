@@ -31,6 +31,8 @@ from sqlalchemy.sql import expression
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.expression import BindParameter
 
+from .solrdbapi import Connection
+
 from . import solrdbapi as module
 
 from .type_map import type_map
@@ -64,6 +66,9 @@ class SolrCompiler(compiler.SQLCompiler):
         from_linter=None,
         lateral_from_linter=None,
         **kw):
+
+        if Connection.solr_spec.spec()[0] < 9:
+            return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
         if binary.operator not in self.merge_ops:
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)

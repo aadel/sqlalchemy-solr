@@ -4,6 +4,8 @@ from numpy import nan
 from pandas import DataFrame
 from requests import Session
 
+from ..admin.solr_spec import SolrSpec
+
 from ..api_globals import _HEADER
 from ..api_globals import _PAYLOAD
 from ..message_formatter import MessageFormatter
@@ -273,6 +275,7 @@ class Cursor:
 class Connection:
     # pylint: disable=too-many-instance-attributes
 
+    solr_spec = None
     mf = MessageFormatter()
 
     # pylint: disable=too-many-arguments
@@ -299,6 +302,8 @@ class Connection:
         self.port = port
         self._session = session
         self._connected = True
+
+        Connection.solr_spec = SolrSpec(f'{proto}{host}:{port}/{server_path}')
 
         SolrTableReflection.connection = self
 
