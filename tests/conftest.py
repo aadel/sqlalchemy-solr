@@ -1,7 +1,18 @@
 import os
 
 import pytest
+from requests import Session
 
+from tests.steps import TestSteps
+
+@pytest.fixture(scope="session")
+# pylint: disable=redefined-outer-name
+def http(settings):
+    test_steps = TestSteps(settings)
+    session = Session()
+    headers = test_steps.login(session)
+
+    return {'session': session, 'headers': headers}
 
 @pytest.fixture(scope="session")
 def settings():
