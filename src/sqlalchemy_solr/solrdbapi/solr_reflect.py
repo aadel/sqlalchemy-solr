@@ -41,6 +41,7 @@ class SolrTableReflection:
                     + "/"
                     + table
                     + "/admin/luke",
+                    params={"wt": "json"},
                     headers=_HEADER,
                 )
                 fields = result.json()["fields"]
