@@ -67,7 +67,8 @@ class SolrCompiler(compiler.SQLCompiler):
         lateral_from_linter=None,
         **kw):
 
-        if Connection.solr_spec.spec()[0] < 9:
+        # Handled in Solr 9
+        if Connection.solr_spec.spec()[0] >= 9:
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
         if binary.operator not in self.merge_ops:
@@ -147,6 +148,10 @@ class SolrCompiler(compiler.SQLCompiler):
         return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
     def visit_clauselist(self, clauselist, **kw):
+        # Handled in Solr 9
+        if Connection.solr_spec.spec()[0] >= 9:
+            return super().visit_clauselist(clauselist, **kw)
+
         if clauselist.operator == operators.and_:
             for c in clauselist.clauses:
                 if isinstance(c, expression.BinaryExpression):
