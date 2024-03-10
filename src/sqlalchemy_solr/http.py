@@ -173,6 +173,7 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
             logging.exception(e)
 
     def _session_get(self, payload, path: str):
+        payload["wt"] = "json"
         try:
             response = self.session.get(
                 self.proto
