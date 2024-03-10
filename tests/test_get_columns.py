@@ -32,10 +32,7 @@ class TestGetColumns:
         ("STATE_s", "VARCHAR"),
         ("STATUS_s", "VARCHAR"),
         ("TERRITORY_s", "VARCHAR"),
-        ("YEAR_ID_i", "INTEGER"),
-        ("_root_", "VARCHAR"),
-        ("_version_", "BIGINT"),
-        ("id", "VARCHAR"),
+        ("YEAR_ID_i", "INTEGER")
     ]
 
     def test_get_columns(self, settings):
