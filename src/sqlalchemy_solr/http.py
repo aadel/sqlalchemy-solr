@@ -168,8 +168,9 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         local_payload["action"] = "LISTALIASES"
         try:
             result = self._session_get(local_payload, "/admin/collections")
-            if result.json()["aliases"]:
+            if "aliases" in result.json() and result.json()["aliases"]:
                 self.aliases = result.json()["aliases"]
+            # No aliases found or aliases are not supported
             else:
                 self.aliases = ()
         except (RequestException, KeyError, TypeError) as e:
