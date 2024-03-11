@@ -6,7 +6,7 @@ A [SQLAlchemy](https://www.sqlalchemy.org/) dialect for Apache Solr.
 
 ## Requirements
 
-The dialect requires Solr version 6.0 or newer.
+The driver is compatible with Solr version 6.5 and higher. Aliases support is compatible with Solr version 6.6 and higher.
 
 ## Installation
 
