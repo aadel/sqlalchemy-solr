@@ -6,7 +6,7 @@ A [SQLAlchemy](https://www.sqlalchemy.org/) dialect for Apache Solr.
 
 ## Requirements
 
-The driver is compatible with Solr version 6.5 and higher. Aliases support is compatible with Solr version 6.6 and higher.
+The dialect is compatible with Solr version 6.0 and higher.
 
 ## Installation
 
@@ -150,6 +150,14 @@ Open-ended date ranges are supported. For example:
 ```
 
 translates to `[2024-01-01T00:00:00Z TO *]`
+
+## Compatibility
+
+| Feature                          | 6.0 | 6.5 | 6.6 | 7.x | 8.x | 9.x |
+|----------------------------------|-----|-----|-----|-----|-----|-----|
+| Aliases                          |  ✗  |  ✗  |  ✓  |  ✓  |  ✓  |  ✓  |
+| Built-in date range compilation  |  ✗  |  ✗  |  ✗  |  ✗  |  ✗  |  ✓  |
+| `SELECT` _expression_ statements |  ✗  |  ✓  |  ✓  |  ✓  |  ✓  |  ✓  |
 
 ## Use Cases
 
