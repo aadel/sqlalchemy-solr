@@ -2,12 +2,13 @@ import os
 
 import pytest
 from requests import Session
+from tests.date_range_funcs import Parameters
+from tests.setup import prepare_orm
 
 from tests.steps import TestSteps
 
 @pytest.fixture(scope="session")
-# pylint: disable=redefined-outer-name
-def http(settings):
+def http(settings):     # pylint: disable=redefined-outer-name
     test_steps = TestSteps(settings)
     session = Session()
     headers = test_steps.login(session)
@@ -40,3 +41,31 @@ def settings():
         "SUPERSET_PASS": os.environ["SUPERSET_PASS"],
         "SUPERSET_DATABASE_NAME": "sales_test_",
     }
+
+@pytest.fixture(scope="class")
+def parameters(settings):   # pylint: disable=redefined-outer-name
+    engine, t = prepare_orm(settings)
+
+    lower_bound = "2017-05-10 00:00:00"
+    upper_bound = "2017-05-20 00:00:00"
+    lower_bound_iso = "2017-05-10T00:00:00Z"
+    upper_bound_iso = "2017-05-20T00:00:00Z"
+    select_statement_1 = (
+        "SELECT sales_test_.`CITY_s` \nFROM sales_test_ \nWHERE TRUE "
+    )
+    select_statement_2 = (
+        "SELECT sales_test_.`CITY_s` \nFROM sales_test_ "
+        "\nWHERE sales_test_.`ORDERDATE_dt` = "
+    )
+
+    p = Parameters(
+        engine,
+        t,
+        lower_bound,
+        upper_bound,
+        lower_bound_iso,
+        upper_bound_iso,
+        [select_statement_1, select_statement_2],
+    )
+
+    return p
