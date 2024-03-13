@@ -51,7 +51,7 @@ If HTTPS is enabled, the following parameters can be supplied:
 
 ### Aliases
 
-Aliases are supported as tables where columns are the union of all the undetlaying collections fields. For example, if an alias `collection_alias` has linked collection members, the following query is valid:
+Aliases are supported as tables where columns are the union of all the underlying collections fields. For example, if an alias `collection_alias` has linked collection members, the following query is valid:
 
 ```
 SELECT f1, f2, f3 FROM collection_alias
