@@ -2,22 +2,21 @@ from requests import Session
 from sqlalchemy import create_engine
 from sqlalchemy import MetaData
 from sqlalchemy import Table
-
-from tests.steps import TestSteps
 from tests.fixtures.fixtures import SalesFixture
+from tests.steps import TestSteps
+
 
 def _index_data(settings):
     f = SalesFixture(settings)
     f.truncate_collection()
     f.index()
 
+
 def prepare_orm(settings):
     _index_data(settings)
     metadata = MetaData()
     engine = create_engine(
-        settings["SOLR_CONNECTION_URI"]
-        + "/"
-        + settings["SOLR_WORKER_COLLECTION_NAME"],
+        settings["SOLR_CONNECTION_URI"] + "/" + settings["SOLR_WORKER_COLLECTION_NAME"],
     )
     t = Table(
         settings["SOLR_WORKER_COLLECTION_NAME"],
@@ -26,6 +25,7 @@ def prepare_orm(settings):
     )
 
     return engine, t
+
 
 def create_database(settings):
     test_steps = TestSteps(settings)

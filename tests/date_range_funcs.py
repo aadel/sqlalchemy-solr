@@ -1,11 +1,9 @@
 from dataclasses import dataclass
 
 import pytest
-
-from sqlalchemy import select
 from sqlalchemy import and_
+from sqlalchemy import select
 from sqlalchemy import Table
-
 from sqlalchemy_solr.admin.solr_spec import SolrSpec
 
 
@@ -19,6 +17,7 @@ class Parameters:
     upper_bound_iso: str
     select_statements: list[str]
 
+
 def date_range_parameters_1(settings, parameters, releases):
     solr_spec = SolrSpec(settings["SOLR_BASE_URL"])
 
@@ -31,8 +30,7 @@ def date_range_parameters_1(settings, parameters, releases):
         (select(parameters.t.c.CITY_s).select_from(parameters.t))
         .where(
             and_(
-                parameters.t.columns["ORDERDATE_dt"]
-                >= parameters.lower_bound,
+                parameters.t.columns["ORDERDATE_dt"] >= parameters.lower_bound,
                 parameters.t.columns["ORDERDATE_dt"] <= parameters.upper_bound,
             )
         )
@@ -57,8 +55,7 @@ def date_range_parameters_2(settings, parameters, releases):
         (select(parameters.t.c.CITY_s).select_from(parameters.t))
         .where(
             and_(
-                parameters.t.columns["ORDERDATE_dt"]
-                > parameters.lower_bound,
+                parameters.t.columns["ORDERDATE_dt"] > parameters.lower_bound,
                 parameters.t.columns["ORDERDATE_dt"] <= parameters.upper_bound,
             )
         )
@@ -83,8 +80,7 @@ def date_range_parameters_3(settings, parameters, releases):
         (select(parameters.t.c.CITY_s).select_from(parameters.t))
         .where(
             and_(
-                parameters.t.columns["ORDERDATE_dt"]
-                >= parameters.lower_bound,
+                parameters.t.columns["ORDERDATE_dt"] >= parameters.lower_bound,
                 parameters.t.columns["ORDERDATE_dt"] < parameters.upper_bound,
             )
         )
@@ -109,8 +105,7 @@ def date_range_parameters_4(settings, parameters, releases):
         (select(parameters.t.c.CITY_s).select_from(parameters.t))
         .where(
             and_(
-                parameters.t.columns["ORDERDATE_dt"]
-                > parameters.lower_bound,
+                parameters.t.columns["ORDERDATE_dt"] > parameters.lower_bound,
                 parameters.t.columns["ORDERDATE_dt"] < parameters.upper_bound,
             )
         )
@@ -135,8 +130,7 @@ def date_range_parameters_5(settings, parameters, releases):
         (select(parameters.t.c.CITY_s).select_from(parameters.t))
         .where(
             and_(
-                parameters.t.columns["ORDERDATE_dt"]
-                <= parameters.upper_bound,
+                parameters.t.columns["ORDERDATE_dt"] <= parameters.upper_bound,
                 parameters.t.columns["ORDERDATE_dt"] >= parameters.lower_bound,
             )
         )
@@ -161,8 +155,7 @@ def date_range_parameters_6(settings, parameters, releases):
         (select(parameters.t.c.CITY_s).select_from(parameters.t))
         .where(
             and_(
-                parameters.t.columns["ORDERDATE_dt"]
-                < parameters.upper_bound,
+                parameters.t.columns["ORDERDATE_dt"] < parameters.upper_bound,
                 parameters.t.columns["ORDERDATE_dt"] >= parameters.lower_bound,
             )
         )
@@ -187,8 +180,7 @@ def date_range_parameters_7(settings, parameters, releases):
         (select(parameters.t.c.CITY_s).select_from(parameters.t))
         .where(
             and_(
-                parameters.t.columns["ORDERDATE_dt"]
-                <= parameters.upper_bound,
+                parameters.t.columns["ORDERDATE_dt"] <= parameters.upper_bound,
                 parameters.t.columns["ORDERDATE_dt"] > parameters.lower_bound,
             )
         )
@@ -213,8 +205,7 @@ def date_range_parameters_8(settings, parameters, releases):
         (select(parameters.t.c.CITY_s).select_from(parameters.t))
         .where(
             and_(
-                parameters.t.columns["ORDERDATE_dt"]
-                < parameters.upper_bound,
+                parameters.t.columns["ORDERDATE_dt"] < parameters.upper_bound,
                 parameters.t.columns["ORDERDATE_dt"] > parameters.lower_bound,
             )
         )

@@ -2,7 +2,6 @@ import logging
 
 import sqlparse
 from pandas import to_datetime
-
 from sqlparse.sql import Identifier
 from sqlparse.sql import IdentifierList
 from sqlparse.tokens import Keyword
@@ -84,7 +83,9 @@ class SolrTableReflection:
                     df[column] = to_datetime(df[column])
                     return "timestamp"
                 except ValueError:
-                    logging.warning('Cannot infer type of column %s, defaulting to varchar', column)
+                    logging.warning(
+                        "Cannot infer type of column %s, defaulting to varchar", column
+                    )
                     return "varchar"
 
     @staticmethod

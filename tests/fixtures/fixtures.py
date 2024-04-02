@@ -2,8 +2,8 @@ import json
 import os
 
 import pysolr
-
 from requests.auth import HTTPBasicAuth
+
 
 class SalesFixture:
 
@@ -23,7 +23,7 @@ class SalesFixture:
             self.base_url + "/" + self.COLLECTION_NAME,
             always_commit=True,
             timeout=SalesFixture.TIMEOUT,
-            auth=auth
+            auth=auth,
         )
 
     def index_jsonl(self, file_path):

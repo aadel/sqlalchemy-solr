@@ -31,15 +31,13 @@ from sqlalchemy.sql import expression
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.expression import BindParameter
 
-from .solrdbapi import Connection
-
 from . import solrdbapi as module
-
+from .solr_type_compiler import SolrTypeCompiler
+from .solrdbapi import Connection
 from .type_map import type_map
 
-from .solr_type_compiler import SolrTypeCompiler
-
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
+
 
 class SolrCompiler(compiler.SQLCompiler):
     # pylint: disable=abstract-method
@@ -61,13 +59,15 @@ class SolrCompiler(compiler.SQLCompiler):
         return " FROM (values(1))"
 
     # pylint: disable=too-many-arguments, too-many-branches
-    def visit_binary(self,
+    def visit_binary(
+        self,
         binary,
         override_operator=None,
         eager_grouping=False,
         from_linter=None,
         lateral_from_linter=None,
-        **kw):
+        **kw,
+    ):
 
         # Handled in Solr 9
         if Connection.solr_spec.spec()[0] >= self.SOLR_DATE_RANGE_TRANS_RELEASE:
@@ -104,13 +104,17 @@ class SolrCompiler(compiler.SQLCompiler):
                     if isinstance(
                         kw[str(binary.left)][uoperator].right.text, BindParameter
                     ):
-                        udatetime = parser.parse(self.unescape_colon(
-                            kw[str(binary.left)][uoperator].right.effective_value
-                        ))
+                        udatetime = parser.parse(
+                            self.unescape_colon(
+                                kw[str(binary.left)][uoperator].right.effective_value
+                            )
+                        )
                     else:
-                        udatetime = parser.parse(self.unescape_colon(
-                            kw[str(binary.left)][uoperator].right.text
-                        ))
+                        udatetime = parser.parse(
+                            self.unescape_colon(
+                                kw[str(binary.left)][uoperator].right.text
+                            )
+                        )
             else:
                 ubound, udatetime = "]", "*"
         else:
@@ -123,16 +127,18 @@ class SolrCompiler(compiler.SQLCompiler):
                         if operators.ge in kw[str(binary.left)]
                         else ("{", operators.gt)
                     )
-                    if isinstance(
-                        kw[str(binary.left)][loperator].right, BindParameter
-                    ):
-                        ldatetime = parser.parse(self.unescape_colon(
-                            kw[str(binary.left)][loperator].right.effective_value
-                        ))
+                    if isinstance(kw[str(binary.left)][loperator].right, BindParameter):
+                        ldatetime = parser.parse(
+                            self.unescape_colon(
+                                kw[str(binary.left)][loperator].right.effective_value
+                            )
+                        )
                     else:
-                        ldatetime = parser.parse(self.unescape_colon(
-                            kw[str(binary.left)][loperator].right.text
-                        ))
+                        ldatetime = parser.parse(
+                            self.unescape_colon(
+                                kw[str(binary.left)][loperator].right.text
+                            )
+                        )
             else:
                 lbound, ldatetime = "[", "*"
 
@@ -170,11 +176,11 @@ class SolrCompiler(compiler.SQLCompiler):
         return super().visit_clauselist(clauselist, **kw)
 
     def visit_array(self, element, **kw):
-        return "ARRAY[%s]" % self.visit_clauselist(element, **kw)   # pylint: disable=consider-using-f-string
+        return f"ARRAY[{self.visit_clauselist(element, **kw)}]"
 
     def unescape_colon(self, s: str) -> str:
         """Unescape colon if present in datetime value"""
-        return s.replace(r'\:', ':')
+        return s.replace(r"\:", ":")
 
     def datetime_str(self, dt) -> str:
         if dt == "*":
@@ -182,11 +188,14 @@ class SolrCompiler(compiler.SQLCompiler):
 
         return dt.isoformat() + "Z"
 
+
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
     # pylint: disable=too-few-public-methods
 
-     # Solr has no schema concept
-    schema_for_object = lambda self, obj: ()    # pylint: disable=unnecessary-lambda-assignment
+    # Solr has no schema concept
+    schema_for_object = (
+        lambda self, obj: ()  # pylint: disable=unnecessary-lambda-assignment
+    )
 
     reserved_words = compiler.RESERVED_WORDS.copy()
     reserved_words.update(
@@ -546,14 +555,14 @@ class SolrDialect(default.DefaultDialect):
         return []
 
     def get_indexes(self, connection, table_name, schema=None, **kw):
-        """Solr has no support for indexes.  Returns an empty list. """
+        """Solr has no support for indexes.  Returns an empty list."""
         return []
 
     def get_pk_constraint(self, connection, table_name, schema=None, **kw):
         """Solr has no support for primary keys.  Retunrs an empty list."""
         return []
 
-    def get_schema_names(self, connection, **kw):   # pylint: disable=unused-argument
+    def get_schema_names(self, connection, **kw):  # pylint: disable=unused-argument
         return tuple(["default"])
 
     def get_view_names(self, connection, schema=None, **kw):

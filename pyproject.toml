@@ -35,4 +35,3 @@ solr = "sqlalchemy_solr.http:SolrDialect_http"
 
 [tool.setuptools.dynamic]
 version = {attr = "sqlalchemy_solr.__version__"}
-

@@ -1,4 +1,3 @@
-
 from tests.date_range_funcs import date_range_funcs
 
 releases = [6, 7, 8]

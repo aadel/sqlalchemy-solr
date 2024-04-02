@@ -21,20 +21,19 @@
 # -*- coding: utf-8 -*-
 import logging
 
-from requests import RequestException, Session
-
+from requests import RequestException
+from requests import Session
 from sqlalchemy_solr.solrdbapi.api_exceptions import DatabaseError
 
 from .api_globals import _HEADER
 from .api_globals import _PAYLOAD
-
 from .base import SolrDialect
 from .message_formatter import MessageFormatter
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
 
 
-class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
+class SolrDialect_http(SolrDialect):  # pylint: disable=invalid-name
     # pylint: disable=abstract-method,too-many-instance-attributes
 
     supports_statement_cache = True
@@ -72,7 +71,7 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
                 self.proto = "https://"
 
         if "token" in url.query:
-            if url.query["token"] is not None :
+            if url.query["token"] is not None:
                 self.token = url.query["token"]
 
         # Mapping server path and collection
@@ -97,11 +96,15 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         # Prepare a session with proper authorization handling.
         session = Session()
         # session.verify property which is bydefault true so Handled here
-        if "verify_ssl" in url.query and url.query["verify_ssl"] in [False, "False", "false"]:
+        if "verify_ssl" in url.query and url.query["verify_ssl"] in [
+            False,
+            "False",
+            "false",
+        ]:
             session.verify = False
 
         if self.token is not None:
-            session.headers.update({'Authorization': f'Bearer {self.token}'})
+            session.headers.update({"Authorization": f"Bearer {self.token}"})
         else:
             session.auth = (self.username, self.password)
         # Utilize this session in other methods.
@@ -126,13 +129,13 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
         local_payload = _PAYLOAD.copy()
 
         if "columns" in kw:
-            columns = kw['columns']
+            columns = kw["columns"]
         else:
             columns = []
             self._get_aliases(local_payload)
 
         if table_name in self.aliases:
-            for collection in self.aliases[table_name].split(','):
+            for collection in self.aliases[table_name].split(","):
                 self.get_columns(None, collection, columns=columns)
 
             return self.get_unique_columns(columns)
@@ -199,10 +202,10 @@ class SolrDialect_http(SolrDialect):    # pylint: disable=invalid-name
 
     def get_unique_columns(self, columns):
         unique_columns = []
-        columns_set = {column['name'] for column in columns}
+        columns_set = {column["name"] for column in columns}
         for c in columns:
-            if c['name'] in columns_set:
+            if c["name"] in columns_set:
                 unique_columns.append(c)
-                columns_set.remove(c['name'])
+                columns_set.remove(c["name"])
 
         return unique_columns

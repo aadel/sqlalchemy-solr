@@ -32,7 +32,7 @@ class TestGetColumns:
         ("STATE_s", "VARCHAR"),
         ("STATUS_s", "VARCHAR"),
         ("TERRITORY_s", "VARCHAR"),
-        ("YEAR_ID_i", "INTEGER")
+        ("YEAR_ID_i", "INTEGER"),
     ]
 
     def test_get_columns(self, settings):
@@ -41,9 +41,13 @@ class TestGetColumns:
         test_steps.create_dataset(session, headers, db_response[0]["id"])
         # pylint: disable=consider-using-f-string
         datasets_response = session.get(
-            settings["SUPERSET_URI"] + "/api/v1/dataset", headers=headers,
-            params={"q":'{{"filters":[{{"col":"table_name","opr":"eq","value":"{}"}}]}}'.format(
-                settings["SUPERSET_DATABASE_NAME"])}
+            settings["SUPERSET_URI"] + "/api/v1/dataset",
+            headers=headers,
+            params={
+                "q": '{{"filters":[{{"col":"table_name","opr":"eq","value":"{}"}}]}}'.format(
+                    settings["SUPERSET_DATABASE_NAME"]
+                )
+            },
         )
         datasets = datasets_response.json()["result"]
         sales_dataset = filter(

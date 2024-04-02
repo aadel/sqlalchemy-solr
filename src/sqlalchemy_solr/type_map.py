@@ -1,5 +1,4 @@
 from sqlalchemy import types
-
 from sqlalchemy_solr.solrdbapi.array import ARRAY
 
 type_map = {

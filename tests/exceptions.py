@@ -7,5 +7,6 @@ class APIException(Exception):  # noqa: B903
 class CouldNotDeleteDatabaseException(APIException):
     pass
 
+
 class CouldNotDeleteDatasetException(APIException):
     pass

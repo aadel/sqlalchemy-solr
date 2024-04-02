@@ -1,4 +1,5 @@
-from tests.exceptions import CouldNotDeleteDatabaseException, CouldNotDeleteDatasetException
+from tests.exceptions import CouldNotDeleteDatabaseException
+from tests.exceptions import CouldNotDeleteDatasetException
 
 
 class TestSteps:
@@ -53,17 +54,19 @@ class TestSteps:
             self.settings["SUPERSET_URI"] + "/api/v1/database", headers=headers
         )
         dbs = dbs_response.json()["result"]
-        db = list(
-            filter(lambda db: db["database_name"] == name, dbs)
-        )
+        db = list(filter(lambda db: db["database_name"] == name, dbs))
         return db
 
     def delete_database(self, session, headers, database_id):
         # pylint: disable=consider-using-f-string
         datasets_response = session.get(
-            self.settings["SUPERSET_URI"] + "/api/v1/dataset", headers=headers,
-            params={"q":'{{"filters":[{{"col":"table_name","opr":"eq","value":"{}"}}]}}'.format(
-                self.settings["SUPERSET_DATABASE_NAME"])}
+            self.settings["SUPERSET_URI"] + "/api/v1/dataset",
+            headers=headers,
+            params={
+                "q": '{{"filters":[{{"col":"table_name","opr":"eq","value":"{}"}}]}}'.format(
+                    self.settings["SUPERSET_DATABASE_NAME"]
+                )
+            },
         )
         datasets = datasets_response.json()["result"]
         for dataset in datasets:

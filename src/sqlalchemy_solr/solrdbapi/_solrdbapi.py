@@ -5,21 +5,21 @@ from pandas import DataFrame
 from requests import Session
 
 from ..admin.solr_spec import SolrSpec
-
 from ..api_globals import _HEADER
 from ..api_globals import _PAYLOAD
 from ..message_formatter import MessageFormatter
-
-from .api_exceptions import ConnectionClosedException, DatabaseHTTPError
-from .api_exceptions import UninitializedResultSetError
+from .api_exceptions import ConnectionClosedException
 from .api_exceptions import CursorClosedException
+from .api_exceptions import DatabaseHTTPError
 from .api_exceptions import ProgrammingError
+from .api_exceptions import UninitializedResultSetError
 from .solr_reflect import SolrTableReflection
 
-apilevel = "2.0"                # pylint: disable=invalid-name
-threadsafety = 3                # pylint: disable=invalid-name
-paramstyle = "qmark"            # pylint: disable=invalid-name
-default_storage_plugin = ""     # pylint: disable=invalid-name
+apilevel = "2.0"  # pylint: disable=invalid-name
+threadsafety = 3  # pylint: disable=invalid-name
+paramstyle = "qmark"  # pylint: disable=invalid-name
+default_storage_plugin = ""  # pylint: disable=invalid-name
+
 
 # Python DB API 2.0 classes
 class Cursor:
@@ -83,16 +83,14 @@ class Cursor:
         query = string_query
         for param in parameters:
             if isinstance(param, str):
-                query = query.replace("?", f"'{param}'", 1)
+                query = query.replace("?", f"{param!r}", 1)
             else:
                 query = query.replace("?", str(param), 1)
         return query
 
     @staticmethod
     # pylint: disable=too-many-arguments
-    def submit_query(
-        query, host, port, proto, server_path, collection, session
-    ):
+    def submit_query(query, host, port, proto, server_path, collection, session):
         local_payload = _PAYLOAD.copy()
         local_payload["stmt"] = query
         return session.get(
@@ -175,7 +173,7 @@ class Cursor:
         self.rowcount = len(self._result_set)
         self._result_set_status = iter(range(len(self._result_set)))
         self.description = tuple(
-            zip(
+            zip(  # noqa: B905
                 column_names,
                 column_types,
                 [None for i in range(len(self._result_set.dtypes.index))],
@@ -303,7 +301,7 @@ class Connection:
         self._session = session
         self._connected = True
 
-        Connection.solr_spec = SolrSpec(f'{proto}{host}:{port}/{server_path}')
+        Connection.solr_spec = SolrSpec(f"{proto}{host}:{port}/{server_path}")
 
         SolrTableReflection.connection = self
 
@@ -344,7 +342,6 @@ class Connection:
         Solr does not support rollback
         """
 
-
     @connected_
     def cursor(self):
         return Cursor(
@@ -377,7 +374,7 @@ def connect(
 
     session = Session()
     # bydefault session.verify is set to True
-    if verify_ssl is not None and verify_ssl in [False,"False","false"]:
+    if verify_ssl is not None and verify_ssl in [False, "False", "false"]:
         session.verify = False
 
     if use_ssl in [True, "True", "true"]:
@@ -401,8 +398,9 @@ def connect(
         host, db, username, password, server_path, collection, port, proto, session
     )
 
+
 def add_authorization(session, username, password, token):
     if token is not None:
-        session.headers.update({'Authorization': f'Bearer {token}'})
+        session.headers.update({"Authorization": f"Bearer {token}"})
     else:
         session.auth = (username, password)
