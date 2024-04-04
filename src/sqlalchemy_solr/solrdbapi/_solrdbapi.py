@@ -176,11 +176,11 @@ class Cursor:
             zip(  # noqa: B905
                 column_names,
                 column_types,
-                [None for i in range(len(self._result_set.dtypes.index))],
-                [None for i in range(len(self._result_set.dtypes.index))],
-                [None for i in range(len(self._result_set.dtypes.index))],
-                [None for i in range(len(self._result_set.dtypes.index))],
-                [True for i in range(len(self._result_set.dtypes.index))],
+                [None for _ in range(len(self._result_set.dtypes.index))],
+                [None for _ in range(len(self._result_set.dtypes.index))],
+                [None for _ in range(len(self._result_set.dtypes.index))],
+                [None for _ in range(len(self._result_set.dtypes.index))],
+                [True for _ in range(len(self._result_set.dtypes.index))],
             )
         )
         return self
