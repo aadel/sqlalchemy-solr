@@ -1,9 +1,8 @@
 import logging
 
-from numpy import nan
-from pandas import DataFrame
 from requests import Session
 
+from .. import type_map
 from ..admin.solr_spec import SolrSpec
 from ..api_globals import _HEADER
 from ..api_globals import _PAYLOAD
@@ -61,6 +60,18 @@ class Cursor:
         self.rowcount = -1
         self.lastrowid = None
         self.default_storage_plugin = None
+
+    def _native_result_types(self, column_types):
+        for result in self._result_set:
+            i = 0  # Column positional index
+            for column_type in column_types:
+                if result[i]:
+                    result[i] = type_map.result_conversion_mapping[type(column_type)](
+                        result[i]
+                    )
+                i += 1
+
+        self._result_set = list(tuple(result for result in self._result_set))
 
     @property
     def connected(self):
@@ -152,13 +163,15 @@ class Cursor:
         if "EOF" in rows[-1]:
             del rows[-1]
         if len(rows) > 0:
-            columns = rows[0].keys()
+            columns = list(rows[0].keys())
 
-        self._result_set = DataFrame(data=rows, columns=columns).fillna(value=nan)
+        self._result_set = list(list(row.values()) for row in rows)
 
         column_names, column_types = SolrTableReflection.reflect_column_types(
-            self._result_set, operation
+            self._result_set, columns, operation
         )
+
+        self._native_result_types(column_types)
 
         # Get column metadata
         column_metadata = list(
@@ -176,11 +189,11 @@ class Cursor:
             zip(  # noqa: B905
                 column_names,
                 column_types,
-                [None for _ in range(len(self._result_set.dtypes.index))],
-                [None for _ in range(len(self._result_set.dtypes.index))],
-                [None for _ in range(len(self._result_set.dtypes.index))],
-                [None for _ in range(len(self._result_set.dtypes.index))],
-                [True for _ in range(len(self._result_set.dtypes.index))],
+                [None for _ in range(len(columns))],
+                [None for _ in range(len(columns))],
+                [None for _ in range(len(columns))],
+                [None for _ in range(len(columns))],
+                [True for _ in range(len(columns))],
             )
         )
         return self
@@ -197,7 +210,7 @@ class Cursor:
             raise UninitializedResultSetError("Resultset not initialized")
 
         try:
-            return self._result_set.iloc[next(self._result_set_status)]
+            return self._result_set[next(self._result_set_status)]
         except StopIteration:
             return None
 
@@ -234,7 +247,7 @@ class Cursor:
 
             # pylint: disable=unsubscriptable-object
             result_subset = self._result_set[index : index + fetch_size]
-            return [tuple(x) for x in result_subset.to_records(index=False)]
+            return [tuple(x) for x in result_subset]
         except StopIteration:
             return []
 
@@ -254,7 +267,7 @@ class Cursor:
             # pylint: disable=unsubscriptable-object
             remaining = self._result_set[next(self._result_set_status) :]
             self._result_set_status = iter(tuple())
-            return [tuple(x) for x in remaining.to_records(index=False)]
+            return [tuple(x) for x in remaining]
 
         except StopIteration:
             return []
@@ -267,7 +280,7 @@ class Cursor:
         return self.default_storage_plugin
 
     def __iter__(self):
-        return self._result_set.iterrows()
+        return self._result_set.__iter__()
 
 
 class Connection:

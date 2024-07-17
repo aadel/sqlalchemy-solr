@@ -48,11 +48,13 @@ class TestSolrTableReflection:
 
         assert len(rows) > 0
 
-        columns = rows[0].keys()
+        columns = list(rows[0].keys())
 
         result_set = DataFrame(data=rows, columns=columns).fillna(value=nan)
 
-        reflected_data_types = SolrTableReflection.reflect_column_types(result_set, sql)
+        reflected_data_types = SolrTableReflection.reflect_column_types(
+            result_set, columns, sql
+        )
 
         columns = dict(
             zip(reflected_data_types[0], reflected_data_types[1])  # noqa: B905

@@ -34,7 +34,7 @@ from sqlalchemy.sql.expression import BindParameter
 from . import solrdbapi as module
 from .solr_type_compiler import SolrTypeCompiler
 from .solrdbapi import Connection
-from .type_map import type_map
+from .type_map import metadata_type_map
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
 
@@ -589,7 +589,7 @@ class SolrDialect(default.DefaultDialect):
 
     def get_data_type(self, data_type):
         try:
-            dt = type_map[data_type]
+            dt = metadata_type_map[data_type]
         except KeyError:
             dt = types.UserDefinedType
         return dt

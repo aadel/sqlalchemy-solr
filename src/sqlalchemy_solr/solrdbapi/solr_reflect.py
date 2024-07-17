@@ -1,7 +1,6 @@
 import logging
 
 import sqlparse
-from pandas import to_datetime
 from sqlparse.sql import Identifier
 from sqlparse.sql import IdentifierList
 from sqlparse.tokens import Keyword
@@ -17,7 +16,7 @@ class SolrTableReflection:
     table_metadata_cache = {}
 
     @staticmethod
-    def reflect_column_types(df, operation):
+    def reflect_column_types(result_set, columns, operation):
         tables = list(
             map(
                 SolrTableReflection.unquote,
@@ -47,14 +46,15 @@ class SolrTableReflection:
 
                 SolrTableReflection.table_metadata_cache[table] = fields
 
-            for column in df:
+            i = 0  # Column positional index
+            for column in columns:
                 names.append(column)
                 # Search for column type in cache
                 prototype = None
                 for table in tables:
                     try:
                         if column in SolrTableReflection.table_metadata_cache[table]:
-                            prototype = type_map.type_map[
+                            prototype = type_map.metadata_type_map[
                                 SolrTableReflection.table_metadata_cache[table][column][
                                     "type"
                                 ]
@@ -63,30 +63,25 @@ class SolrTableReflection:
                         logging.warning(e)
 
                     if not prototype:
-                        prototype = SolrTableReflection.infer_column_type(df, column)
+                        prototype = SolrTableReflection.infer_column_type(
+                            result_set, i, column
+                        )
 
                     types.append(prototype)
+
+                i += 1
 
         return names, types
 
     @staticmethod
-    def infer_column_type(df, column):
-        try:
-            df[column] = df[column].astype(int)
-            return "bigint"
-        except ValueError:
-            try:
-                df[column] = df[column].astype(float)
-                return "decimal"
-            except ValueError:
-                try:
-                    df[column] = to_datetime(df[column])
-                    return "timestamp"
-                except ValueError:
-                    logging.warning(
-                        "Cannot infer type of column %s, defaulting to varchar", column
-                    )
-                    return "varchar"
+    def infer_column_type(result_set, i, column):
+        for result in result_set:
+            t = type(result[i])
+            if t is not type_map.NoneType:
+                return type_map.native_type_map[t]
+
+        logging.warning("Cannot infer type of column %s, defaulting to varchar", column)
+        return type_map.native_type_map[str]
 
     @staticmethod
     def extract_from_part(parsed):
