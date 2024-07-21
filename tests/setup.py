@@ -15,9 +15,7 @@ def _index_data(settings):
 def prepare_orm(settings):
     _index_data(settings)
     metadata = MetaData()
-    engine = create_engine(
-        settings["SOLR_CONNECTION_URI"] + "/" + settings["SOLR_WORKER_COLLECTION_NAME"],
-    )
+    engine = create_engine(settings["SOLR_CONNECTION_URI"])
     t = Table(
         settings["SOLR_WORKER_COLLECTION_NAME"],
         metadata,
