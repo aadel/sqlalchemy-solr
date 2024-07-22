@@ -186,7 +186,7 @@ class SolrCompiler(compiler.SQLCompiler):
         if dt == "*":
             return dt
 
-        return dt.isoformat() + "Z"
+        return dt.strftime("%Y-%m-%dT%H:%M:%SZ")  # Assuming UTC time supplied
 
 
 class SolrIdentifierPreparer(compiler.IdentifierPreparer):
