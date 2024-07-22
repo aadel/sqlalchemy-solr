@@ -151,7 +151,7 @@ class SolrCompiler(compiler.SQLCompiler):
             + ubound
             + "'"
         )
-        binary.operator = operators.eq
+        override_operator = operators.eq
 
         return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
