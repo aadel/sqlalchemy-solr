@@ -292,7 +292,7 @@ class Connection:
     def __init__(
         self,
         host,
-        db,
+        database,
         username,
         password,
         server_path,
@@ -303,7 +303,7 @@ class Connection:
     ):
 
         self.host = host
-        self.db = db
+        self.database = database
         self.username = username
         self.password = password
         self.server_path = server_path
@@ -356,7 +356,7 @@ class Connection:
     def cursor(self):
         return Cursor(
             self.host,
-            self.db,
+            self.database,
             self.username,
             self.password,
             self.server_path,
@@ -371,7 +371,7 @@ class Connection:
 # pylint: disable=too-many-arguments
 def connect(
     host,
-    db,
+    database,
     server_path,
     collection,
     port=defaults.PORT,
@@ -405,7 +405,15 @@ def connect(
             raise DatabaseHTTPError(response.text, response.status_code)
 
     return Connection(
-        host, db, username, password, server_path, collection, port, proto, session
+        host,
+        database,
+        username,
+        password,
+        server_path,
+        collection,
+        port,
+        proto,
+        session,
     )
 
 

@@ -51,7 +51,7 @@ class SolrDialect_http(SolrDialect):  # pylint: disable=invalid-name
         self.port = None
         self.server_path = None
         self.collection = None
-        self.db = None
+        self.database = None
         self.username = None
         self.password = None
         self.token = None
@@ -62,22 +62,18 @@ class SolrDialect_http(SolrDialect):  # pylint: disable=invalid-name
 
     def create_connect_args(self, url):
 
-        url_port = url.port or 8047
-        qargs = {"host": url.host, "port": url_port}
-
-        db_parts = url.database.split("/")
-        db = ".".join(db_parts)
+        qargs = url.translate_connect_args()
+        qargs.update(url.query)
 
         self.proto = "http://"
-        if "use_ssl" in url.query:
-            if url.query["use_ssl"] in [True, "True", "true"]:
-                self.proto = "https://"
+        if "use_ssl" in url.query and url.query["use_ssl"] in ["True", "true"]:
+            self.proto = "https://"
 
-        if "token" in url.query:
-            if url.query["token"] is not None:
-                self.token = url.query["token"]
+        if "token" in url.query and url.query["token"] is not None:
+            self.token = url.query["token"]
 
         # Mapping server path and collection
+        db_parts = qargs["database"].split("/")
         if db_parts[0]:
             server_path = db_parts[0]
         else:
@@ -92,7 +88,7 @@ class SolrDialect_http(SolrDialect):  # pylint: disable=invalid-name
         self.port = url.port or defaults.PORT
         self.username = url.username
         self.password = url.password
-        self.db = db
+        self.database = url.database
         self.server_path = server_path
         self.collection = collection
 
@@ -109,14 +105,10 @@ class SolrDialect_http(SolrDialect):  # pylint: disable=invalid-name
         # Utilize this session in other methods.
         self.session = session
 
-        qargs.update(url.query)
-        qargs["db"] = db
         qargs["server_path"] = server_path
         qargs["collection"] = collection
-        qargs["username"] = url.username
-        qargs["password"] = url.password
 
-        return [], qargs
+        return ([], qargs)
 
     def get_table_names(self, connection, schema=None, **kw):
         local_payload = _PAYLOAD.copy()
