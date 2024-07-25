@@ -1,9 +1,9 @@
 import logging
 
 from requests import Session
+from sqlalchemy_solr import defaults
 
 from .. import type_map
-from ..admin.solr_spec import SolrSpec
 from ..api_globals import _HEADER
 from ..api_globals import _PAYLOAD
 from ..message_formatter import MessageFormatter
@@ -286,7 +286,6 @@ class Cursor:
 class Connection:
     # pylint: disable=too-many-instance-attributes
 
-    solr_spec = None
     mf = MessageFormatter()
 
     # pylint: disable=too-many-arguments
@@ -313,8 +312,6 @@ class Connection:
         self.port = port
         self._session = session
         self._connected = True
-
-        Connection.solr_spec = SolrSpec(f"{proto}{host}:{port}/{server_path}")
 
         SolrTableReflection.connection = self
 
@@ -374,23 +371,23 @@ class Connection:
 # pylint: disable=too-many-arguments
 def connect(
     host,
-    port=8047,
-    db=None,
+    db,
+    server_path,
+    collection,
+    port=defaults.PORT,
     username=None,
     password=None,
-    server_path="solr",
-    collection=None,
-    use_ssl=False,
+    use_ssl=None,
     verify_ssl=None,
     token=None,
 ):
 
     session = Session()
     # bydefault session.verify is set to True
-    if verify_ssl is not None and verify_ssl in [False, "False", "false"]:
+    if verify_ssl is not None and verify_ssl in ["False", "false"]:
         session.verify = False
 
-    if use_ssl in [True, "True", "true"]:
+    if use_ssl in ["True", "true"]:
         proto = "https://"
     else:
         proto = "http://"

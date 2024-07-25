@@ -30,10 +30,10 @@ from sqlalchemy.sql import compiler
 from sqlalchemy.sql import expression
 from sqlalchemy.sql import operators
 from sqlalchemy.sql.expression import BindParameter
+from sqlalchemy_solr import release_flags
 
 from . import solrdbapi as module
 from .solr_type_compiler import SolrTypeCompiler
-from .solrdbapi import Connection
 from .type_map import metadata_type_map
 
 logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
@@ -41,8 +41,6 @@ logging.basicConfig(format="%(asctime)s - %(message)s", level=logging.ERROR)
 
 class SolrCompiler(compiler.SQLCompiler):
     # pylint: disable=abstract-method
-
-    SOLR_DATE_RANGE_TRANS_RELEASE = 9
 
     merge_ops = (operators.ge, operators.gt, operators.le, operators.lt)
     bounds = {
@@ -70,7 +68,10 @@ class SolrCompiler(compiler.SQLCompiler):
     ):
 
         # Handled in Solr 9
-        if Connection.solr_spec.spec()[0] >= self.SOLR_DATE_RANGE_TRANS_RELEASE:
+        if (
+            SolrDialect.solr_spec.spec()[0]
+            >= release_flags.SOLR_DATE_RANGE_TRANS_RELEASE
+        ):
             return super().visit_binary(binary, override_operator, eager_grouping, **kw)
 
         if binary.operator not in self.merge_ops:
@@ -157,7 +158,10 @@ class SolrCompiler(compiler.SQLCompiler):
 
     def visit_clauselist(self, clauselist, **kw):
         # Handled in Solr 9
-        if Connection.solr_spec.spec()[0] >= self.SOLR_DATE_RANGE_TRANS_RELEASE:
+        if (
+            SolrDialect.solr_spec.spec()[0]
+            >= release_flags.SOLR_DATE_RANGE_TRANS_RELEASE
+        ):
             return super().visit_clauselist(clauselist, **kw)
 
         if clauselist.operator == operators.and_:
@@ -536,6 +540,8 @@ class SolrDialect(default.DefaultDialect):
     description_encoding = None
     supports_native_boolean = True
     supports_statement_cache = True
+
+    solr_spec = None
 
     def __init__(self, **kw):
         default.DefaultDialect.__init__(self, **kw)

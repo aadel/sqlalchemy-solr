@@ -23,6 +23,9 @@ import logging
 
 from requests import RequestException
 from requests import Session
+from sqlalchemy_solr import defaults
+from sqlalchemy_solr import release_flags
+from sqlalchemy_solr.admin.solr_spec import SolrSpec
 from sqlalchemy_solr.solrdbapi.api_exceptions import DatabaseError
 
 from .api_globals import _HEADER
@@ -86,7 +89,7 @@ class SolrDialect_http(SolrDialect):  # pylint: disable=invalid-name
 
         # Save this for later use.
         self.host = url.host
-        self.port = url_port
+        self.port = url.port or defaults.PORT
         self.username = url.username
         self.password = url.password
         self.db = db
@@ -96,11 +99,7 @@ class SolrDialect_http(SolrDialect):  # pylint: disable=invalid-name
         # Prepare a session with proper authorization handling.
         session = Session()
         # session.verify property which is bydefault true so Handled here
-        if "verify_ssl" in url.query and url.query["verify_ssl"] in [
-            False,
-            "False",
-            "false",
-        ]:
+        if "verify_ssl" in url.query and url.query["verify_ssl"] in ["False", "false"]:
             session.verify = False
 
         if self.token is not None:
@@ -209,3 +208,22 @@ class SolrDialect_http(SolrDialect):  # pylint: disable=invalid-name
                 columns_set.remove(c["name"])
 
         return unique_columns
+
+    def on_connect_url(self, url):
+        SolrDialect.solr_spec = SolrSpec(url)
+
+        def do_on_connect(connection):  # pylint: disable=unused-argument
+            SolrDialect.solr_spec = SolrSpec(url)
+
+            if (
+                SolrDialect.solr_spec.spec()[0]
+                < release_flags.SOLR_DATE_RANGE_TRANS_RELEASE
+            ):
+                logging.warning(
+                    "Solr version %s less than 9, SQL compilation cache disabled",
+                    SolrDialect.solr_spec.spec()[0],
+                )
+                SolrDialect_http.supports_statement_cache = False
+                SolrDialect.supports_statement_cache = False
+
+        return do_on_connect

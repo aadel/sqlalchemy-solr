@@ -28,6 +28,8 @@ To connect to Solr with SQLAlchemy, the following URL pattern can be used:
 solr://<username>:<password>@<host>:<port>/solr/<collection>[?parameter=value]
 ```
 
+_Note_: port 8983 is used when `port` in the URL is omitted
+
 ### Authentication
 
 #### Basic Authentication
@@ -162,6 +164,7 @@ translates to `[2024-01-01T00:00:00Z TO *]`
 | Aliases                          |  ✗  |  ✗  |  ✓  |  ✓  |  ✓  |  ✓  |
 | Built-in date range compilation  |  ✗  |  ✗  |  ✗  |  ✗  |  ✗  |  ✓  |
 | `SELECT` _expression_ statements |  ✗  |  ✓  |  ✓  |  ✓  |  ✓  |  ✓  |
+| SQL compilation caching          |  ✗  |  ✗  |  ✗  |  ✗  |  ✗  |  ✓  |
 
 ## Use Cases
 
