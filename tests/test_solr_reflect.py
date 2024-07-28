@@ -1,5 +1,3 @@
-from numpy import nan
-from pandas import DataFrame
 from requests import Session
 from requests.auth import HTTPBasicAuth
 from sqlalchemy import types
@@ -12,7 +10,7 @@ class TestSolrTableReflection:
     # pylint: disable=too-few-public-methods
     def test_solr_columns_reflection(self, settings):
         sql = """
-        SELECT CITY_s, PHONE_ss FROM sales_test_
+        SELECT CITY_s, PHONE_ss FROM sales_test_ LIMIT 10
         """
 
         if settings["SOLR_USER"]:
@@ -34,32 +32,33 @@ class TestSolrTableReflection:
             settings["PROTO"],
             session,
         )
-        result = Cursor.submit_query(
-            Cursor.substitute_in_query(sql, []),
+
+        cursor = Cursor(
             settings["HOST"],
-            settings["PORT"],
-            settings["PROTO"],
+            f'{settings["SERVER_PATH"]}/{settings["SOLR_WORKER_COLLECTION_NAME"]}',
+            settings["SOLR_USER"],
+            settings["SOLR_PASS"],
             settings["SERVER_PATH"],
             settings["SOLR_WORKER_COLLECTION_NAME"],
+            settings["PORT"],
+            settings["PROTO"],
             session,
+            SolrTableReflection.connection,
         )
+        result_set = cursor.execute(sql, [])
 
-        rows = result.json()["result-set"]["docs"]
+        assert result_set.rowcount > 0
 
-        assert len(rows) > 0
-
-        columns = list(rows[0].keys())
-
-        result_set = DataFrame(data=rows, columns=columns).fillna(value=nan)
+        columns = map(lambda col: col[0], result_set.description)
 
         reflected_data_types = SolrTableReflection.reflect_column_types(
             result_set, columns, sql
         )
 
-        columns = dict(
+        reflected_columns = dict(
             zip(reflected_data_types[0], reflected_data_types[1])  # noqa: B905
         )
 
-        assert isinstance(columns["CITY_s"], types.VARCHAR)
-        assert isinstance(columns["PHONE_ss"], types.ARRAY)
-        assert isinstance(columns["PHONE_ss"].item_type, types.VARCHAR)
+        assert isinstance(reflected_columns["CITY_s"], types.VARCHAR)
+        assert isinstance(reflected_columns["PHONE_ss"], types.ARRAY)
+        assert isinstance(reflected_columns["PHONE_ss"].item_type, types.VARCHAR)
