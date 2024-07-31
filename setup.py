@@ -20,7 +20,7 @@ with open(readme, encoding="utf-8") as f:
 setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
-    author="Ahmed Adel"
+    author="Ahmed Adel",
     tests_require=["pysolr", "pytest >= 6.2.1"],
     test_suite="nose.collector",
     zip_safe=False,
