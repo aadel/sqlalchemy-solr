@@ -182,6 +182,13 @@ class SolrCompiler(compiler.SQLCompiler):
     def visit_array(self, element, **kw):
         return f"ARRAY[{self.visit_clauselist(element, **kw)}]"
 
+    # Solr LIKE and NOT LIKE operators are case insensetive
+    def visit_ilike_op_binary(self, binary, operator, **kw):
+        return super().visit_like_op_binary(binary, operator, **kw)
+
+    def visit_not_ilike_op_binary(self, binary, operator, **kw):
+        return super().visit_not_like_op_binary(binary, operator, **kw)
+
     def unescape_colon(self, s: str) -> str:
         """Unescape colon if present in datetime value"""
         return s.replace(r"\:", ":")
