@@ -158,6 +158,12 @@ Open-ended date ranges are supported. For example:
 
 translates to `[2024-01-01T00:00:00Z TO *]`
 
+## Operator Translation
+`ILIKE` and `NOT ILIKE` operators are translated to `LIKE` amd `NOT LIKE` operators which are case in-sensetive in Solr.
+
+## Miscellaneous
+SQL statement semi-colon is removed if present.
+
 ## Compatibility
 
 | Feature                          | 6.0 | 6.5 | 6.6 | 7.x | 8.x | 9.x |
