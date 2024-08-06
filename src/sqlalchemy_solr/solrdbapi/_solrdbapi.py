@@ -92,6 +92,11 @@ class Cursor:
     @staticmethod
     def substitute_in_query(string_query, parameters):
         query = string_query
+
+        # Statement semi-colon is not supported in Solr syntax
+        if query.endswith(";"):
+            query = query[:-1]
+
         for param in parameters:
             if isinstance(param, str):
                 query = query.replace("?", f"{param!r}", 1)
