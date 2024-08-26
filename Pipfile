@@ -7,7 +7,7 @@ name = "pypi"
 sqlalchemy = "~=1.4.7"
 python-dateutil = "~=2.8.1"
 pre-commit = "~=3.7.1"
-requests = "~=2.31.0"
+requests = "~=2.32.0"
 sqlparse = ">=0.4.4,<0.6.0"
 
 [dev-packages]
