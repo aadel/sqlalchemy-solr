@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.4 (2024-04-24) and upward
+
+Changes can be viewed on [Releases](http://github.com/aadel/sqlalchemy-solr/releases) page
+
 ## 0.2.3 (2024-01-15)
 
 ### Features
